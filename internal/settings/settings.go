@@ -6,6 +6,8 @@ import (
 	"github.com/mazznoer/csscolorparser"
 )
 
+const ApplicationName = "QRVC"
+
 type Settings struct {
 	InputFilePath        *string
 	VcardVersion         *string
@@ -15,7 +17,7 @@ type Settings struct {
 	ForegroundColor      *csscolorparser.Color
 }
 
-func MustPrepareSettings() *Settings {
+func PrepareSettings() (*Settings, error) {
 
 	settings := Settings{}
 	settings.InputFilePath = pflag.String("i", "", "The path and name of the vcard input file. When this argument is not provided, the programm will ask for vcard details interactively.")
@@ -35,16 +37,16 @@ func MustPrepareSettings() *Settings {
 	//bring the colors into the correct format
 
 	if c, err := csscolorparser.Parse(*foregroundColor); err != nil {
-		panic(err)
+		return nil, err
 	} else {
 		settings.ForegroundColor = &c
 	}
 
 	if c, err := csscolorparser.Parse(*backgroundColor); err != nil {
-		panic(err)
+		return nil, err
 	} else {
 		settings.BackgroundColor = &c
 	}
 
-	return &settings
+	return &settings, nil
 }
