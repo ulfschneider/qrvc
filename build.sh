@@ -1,7 +1,6 @@
 #! /bin/bash
 echo "Building qrvc"
 # check for vulnerabilities
-echo "Checking for vulnerabilities"
 govulncheck ./...
 
 #application name

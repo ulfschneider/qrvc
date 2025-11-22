@@ -19,8 +19,6 @@ func run(settings *settings.Settings) error {
 		return err
 	}
 
-	fmt.Println("\nWriting the result")
-
 	if file, err := os.Create(*settings.VCardOutputFilePath); err != nil {
 		return err
 	} else {
