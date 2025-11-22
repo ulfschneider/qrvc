@@ -10,9 +10,9 @@ const ApplicationName = "QRVC"
 
 type Settings struct {
 	InputFilePath        *string
-	VcardVersion         *string
-	QrCodeOutputFilePath *string
-	VcardOutputFilePath  *string
+	VCardVersion         *string
+	QRCodeOutputFilePath *string
+	VCardOutputFilePath  *string
 	BackgroundColor      *csscolorparser.Color
 	ForegroundColor      *csscolorparser.Color
 }
@@ -20,17 +20,17 @@ type Settings struct {
 func PrepareSettings() (*Settings, error) {
 
 	settings := Settings{}
-	settings.InputFilePath = pflag.String("i", "", "The path and name of the vcard input file. When this argument is not provided, the programm will ask for vcard details interactively.")
+	settings.InputFilePath = pflag.String("i", "", "The path and name of the vCard input file. ")
 
-	settings.VcardVersion = pflag.String("v", "3.0", "The vcard version to create. This will only be used when no vcard input file is given.")
+	settings.VCardVersion = pflag.String("v", "3.0", "The vCard version to create.")
 
-	settings.QrCodeOutputFilePath = pflag.String("q", "vcard.png", "The path and name of the QR code output file to write.")
+	settings.QRCodeOutputFilePath = pflag.String("q", "vcard.png", "The path and name of the generated QR code file.")
 
-	settings.VcardOutputFilePath = pflag.String("o", "vcard.vcf", "When no vcard input file is provided, the interactiveley generated vcard will be stored under the name given here.")
+	settings.VCardOutputFilePath = pflag.String("o", "vcard.vcf", "The path and name of generated vCard file.")
 
-	foregroundColor := pflag.String("f", "black", "Define the foreground color of the QR code. This can be a hex RGB color value or a CSS color name.")
+	foregroundColor := pflag.String("f", "black", "The foreground color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
-	backgroundColor := pflag.String("b", "transparent", "Define the background color of the QR code. This can be a hex RGB color value or a CSS color name.")
+	backgroundColor := pflag.String("b", "transparent", "The background color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
 	pflag.Parse()
 

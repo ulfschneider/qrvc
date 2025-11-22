@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"qrvc/internal/cli"
 	"qrvc/internal/settings"
 	"slices"
 	"strings"
@@ -158,7 +159,6 @@ func setTypedVcardFieldValue(card *vcard.Card, fieldName, wantType, value string
 	typedFields := (*card)[fieldName]
 	for _, f := range typedFields {
 		if slices.Contains(f.Params.Types(), wantType) {
-			fmt.Println(fieldName, wantType, "has type")
 			f.Value = value
 			return
 		}
@@ -276,11 +276,7 @@ func scanName(card *vcard.Card) error {
 		name.HonorificSuffix = honorificSuffix
 	}
 
-	if len(card.Names()) == 0 {
-		card.AddName(name)
-	} else {
-		card.Names()[0] = name
-	}
+	card.SetName(name)
 
 	return nil
 }
@@ -361,11 +357,7 @@ func scanAddress(card *vcard.Card) error {
 		address.Country = country
 	}
 
-	if len(card.Addresses()) == 0 {
-		card.AddAddress(address)
-	} else {
-		card.Addresses()[0] = address
-	}
+	card.SetAddress(address)
 
 	return nil
 }
@@ -422,13 +414,22 @@ func encodeVcard(card *vcard.Card) (string, error) {
 	return buf.String(), nil
 }
 
-func askRepeatReadingInput() (bool, error) {
+func decodeVcard(reader io.Reader) (vcard.Card, error) {
+	dec := vcard.NewDecoder(reader)
+	card, err := dec.Decode()
+	if err != nil {
+		return nil, err
+	}
+	return card, nil
+}
+
+func repeatReadingInput() (bool, error) {
 	fmt.Println()
 
-	label := "Want to change something? Repeat?"
+	label := "Do you want to edit your input?"
 
 	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}:",
+		Label:    "{{ . }}",
 		Active:   "> {{ . }}",
 		Inactive: "  {{ . }}",
 		Selected: label + " {{ . }}",
@@ -436,63 +437,68 @@ func askRepeatReadingInput() (bool, error) {
 
 	prompt := promptui.Select{
 		Label:     label,
-		Items:     []string{"Yes", "No"},
+		Items:     []string{"I am ready! Print the results.", "Let me change some input."},
 		Templates: templates,
-		CursorPos: 1,
+		CursorPos: 0,
 	}
 
-	_, result, err := prompt.Run()
+	cursorPos, _, err := prompt.Run()
 	if err != nil {
 		return false, err
 	}
 
-	if result == "Yes" {
+	if cursorPos == 1 {
 		return true, nil
 	} else {
 		return false, nil
 	}
 }
 
-func PrepareVcard(args *settings.Settings) (string, error) {
+func cardInstance(args *settings.Settings) (vcard.Card, error) {
 
 	if *args.InputFilePath == "" {
-		// use the interactive mode to ask for vcard properties
-		// and produce vcard content out of it
-
-		card := make(vcard.Card)
-
-		for {
-			fmt.Println("\nReading input to create the vcard")
-			fmt.Println("Press ENTER to proceed or CTRL-C to cancel")
-
-			card.SetValue(vcard.FieldVersion, *args.VcardVersion)
-			for _, prop := range inputProperties {
-				if err := scanVcardProperty(&card, &prop); err != nil {
-					return "", err
-				}
-
-			}
-			if readInput, err := askRepeatReadingInput(); err != nil {
-				return "", err
-			} else if !readInput {
-				break
-			}
-
-		}
-		return encodeVcard(&card)
+		return make(vcard.Card), nil
 	} else {
 		// use the input file as vcard content
-		fmt.Println("\nReading vcard file")
+		fmt.Println("\nReading vCard file", cli.SprintValue(*args.InputFilePath))
 		file, err := os.Open(*args.InputFilePath)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		defer file.Close()
 
-		b, err := io.ReadAll(file)
-		if err != nil {
-			return "", err
+		if card, err := decodeVcard(file); err != nil {
+			return nil, err
+		} else {
+			return card, nil
 		}
-		return string(b), nil
 	}
+}
+
+func PrepareVcard(args *settings.Settings) (string, error) {
+
+	card, err := cardInstance(args)
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		fmt.Println("\nProvide your input and press ENTER to proceed or CTRL-C to cancel.")
+
+		card.SetValue(vcard.FieldVersion, *args.VCardVersion)
+		for _, prop := range inputProperties {
+			if err := scanVcardProperty(&card, &prop); err != nil {
+				return "", err
+			}
+
+		}
+
+		if readInput, err := repeatReadingInput(); err != nil {
+			return "", err
+		} else if !readInput {
+			break
+		}
+	}
+
+	return encodeVcard(&card)
 }

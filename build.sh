@@ -1,4 +1,5 @@
 #! /bin/bash
+echo "Building qrvc"
 # check for vulnerabilities
 echo "Checking for vulnerabilities"
 govulncheck ./...
@@ -37,3 +38,5 @@ build_for_target linux amd64 ""
 
 # build Linux on ARM
 build_for_target linux arm64 ""
+
+echo "Ready 👋"
