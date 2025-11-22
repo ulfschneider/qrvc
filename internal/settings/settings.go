@@ -14,7 +14,6 @@ const ApplicationName = "QRVC"
 
 type Settings struct {
 	InputFilePath        *string
-	OutputFilePath       *string
 	VCardVersion         *string
 	QRCodeOutputFilePath *string
 	VCardOutputFilePath  *string
@@ -30,7 +29,7 @@ func PrepareSettings() (*Settings, error) {
 
 	settings.VCardVersion = pflag.StringP("version", "v", "3.0", "The vCard version to create.")
 
-	settings.OutputFilePath = pflag.StringP("output", "o", "", "The path and name for the output. Will receive the extension .png for the QR code and .vcf for the vCard. Will use the input file basename by default.")
+	outputFilePath := pflag.StringP("output", "o", "", "The path and name for the output. Will receive the extension .png for the QR code and .vcf for the vCard. Will use the input file basename by default.")
 
 	foregroundColor := pflag.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
@@ -40,17 +39,18 @@ func PrepareSettings() (*Settings, error) {
 
 	pflag.Parse()
 
-	if *settings.InputFilePath != "" && *settings.OutputFilePath == "" {
-		base := filepath.Base(*settings.InputFilePath)                          // "file.txt"
-		*settings.OutputFilePath = strings.TrimSuffix(base, filepath.Ext(base)) // "file"
+	//prepare output file names
+	if *settings.InputFilePath != "" && *outputFilePath == "" {
+		base := filepath.Base(*settings.InputFilePath)                 // "file.txt"
+		*outputFilePath = strings.TrimSuffix(base, filepath.Ext(base)) // "file"
 	}
-	if *settings.OutputFilePath == "" {
-		*settings.OutputFilePath = "vcard"
+	if *outputFilePath == "" {
+		*outputFilePath = "vcard"
 	}
 	settings.QRCodeOutputFilePath = new(string)
-	*settings.QRCodeOutputFilePath = *settings.OutputFilePath + ".png"
+	*settings.QRCodeOutputFilePath = *outputFilePath + ".png"
 	settings.VCardOutputFilePath = new(string)
-	*settings.VCardOutputFilePath = *settings.OutputFilePath + ".vcf"
+	*settings.VCardOutputFilePath = *outputFilePath + ".vcf"
 
 	//verify silent mode
 	if *settings.Silent && *settings.InputFilePath == "" {
@@ -58,7 +58,6 @@ func PrepareSettings() (*Settings, error) {
 	}
 
 	//bring the colors into the correct format
-
 	if c, err := csscolorparser.Parse(*foregroundColor); err != nil {
 		return nil, err
 	} else {
