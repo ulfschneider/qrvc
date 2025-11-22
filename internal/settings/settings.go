@@ -3,6 +3,7 @@ package settings
 import (
 	"errors"
 	"path/filepath"
+	"qrvc/internal/cli"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -56,6 +57,7 @@ func PrepareSettings() (*Settings, error) {
 	if *settings.Silent && *settings.InputFilePath == "" {
 		return nil, errors.New("You must provide an input file when running in silent mode")
 	}
+	cli.Silent = *settings.Silent
 
 	//bring the colors into the correct format
 	if c, err := csscolorparser.Parse(*foregroundColor); err != nil {

@@ -460,7 +460,7 @@ func cardInstance(vcardFileName string) (vcard.Card, error) {
 		return make(vcard.Card), nil
 	} else {
 		// use the input file as vcard content
-		fmt.Println("\nReading vCard file", cli.SprintValue(vcardFileName))
+		cli.Println("\nReading vCard file", cli.SprintValue(vcardFileName))
 		file, err := os.Open(vcardFileName)
 		if err != nil {
 			return nil, err
@@ -484,7 +484,7 @@ func PrepareVcard(settings *settings.Settings) (string, error) {
 
 	if *settings.Silent == false {
 		for {
-			fmt.Println("\nProvide your input and press ENTER to proceed or CTRL-C to cancel.")
+			cli.Println("\nProvide your input and press ENTER to proceed or CTRL-C to cancel.")
 
 			card.SetValue(vcard.FieldVersion, *settings.VCardVersion)
 			for _, prop := range inputProperties {

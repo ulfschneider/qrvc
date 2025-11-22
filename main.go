@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"qrvc/internal/cli"
 	"qrvc/internal/settings"
@@ -26,26 +25,28 @@ func run(settings *settings.Settings) error {
 		if _, err := file.WriteString(vcardContent); err != nil {
 			return err
 		} else {
-			fmt.Println("The vCard has been written to", cli.SprintValue(*settings.VCardOutputFilePath))
+			cli.Println("The vCard has been written to", cli.SprintValue(*settings.VCardOutputFilePath))
 		}
 	}
 
 	if err := qrcode.WriteColorFile(vcardContent, qrcode.Medium, 256, *settings.BackgroundColor, *settings.ForegroundColor, *settings.QRCodeOutputFilePath); err != nil {
 		return err
 	} else {
-		fmt.Println("The QR code has been written to", cli.SprintValue(*settings.QRCodeOutputFilePath))
+		cli.Println("The QR code has been written to", cli.SprintValue(*settings.QRCodeOutputFilePath))
 	}
 
 	return nil
 }
 
-func finalize(err error) {
+func finalize(err error, args *settings.Settings) {
 	if err == promptui.ErrInterrupt {
-		fmt.Println("You stopped via CTRL-C")
+		cli.Println("You stopped via CTRL-C")
 	} else if err != nil {
-		fmt.Println(err)
+		cli.Println(err)
 	}
-	fmt.Println("👋")
+
+	cli.Println("👋")
+
 }
 
 func main() {
@@ -53,15 +54,15 @@ func main() {
 	var args *settings.Settings
 
 	defer func() {
-		finalize(err)
+		finalize(err, args)
 	}()
 
 	if args, err = settings.PrepareSettings(); err != nil {
 		return
 	}
 
-	fmt.Println("You are running qrvc, a commandline tool to prepare a QR code from a vCard.")
-	fmt.Println("Get a list of options by starting the program in the form: qrvc -h")
+	cli.Println("You are running qrvc, a commandline tool to prepare a QR code from a vCard.")
+	cli.Println("Get a list of options by starting the program in the form: qrvc -h")
 
 	err = run(args)
 }
