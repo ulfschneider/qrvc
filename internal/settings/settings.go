@@ -1,6 +1,10 @@
 package settings
 
 import (
+	"errors"
+	"path/filepath"
+	"strings"
+
 	"github.com/spf13/pflag"
 
 	"github.com/mazznoer/csscolorparser"
@@ -10,9 +14,11 @@ const ApplicationName = "QRVC"
 
 type Settings struct {
 	InputFilePath        *string
+	OutputFilePath       *string
 	VCardVersion         *string
 	QRCodeOutputFilePath *string
 	VCardOutputFilePath  *string
+	Silent               *bool
 	BackgroundColor      *csscolorparser.Color
 	ForegroundColor      *csscolorparser.Color
 }
@@ -20,19 +26,36 @@ type Settings struct {
 func PrepareSettings() (*Settings, error) {
 
 	settings := Settings{}
-	settings.InputFilePath = pflag.String("i", "", "The path and name of the vCard input file. ")
+	settings.InputFilePath = pflag.StringP("input", "i", "", "The path and name of the vCard input file. ")
 
-	settings.VCardVersion = pflag.String("v", "3.0", "The vCard version to create.")
+	settings.VCardVersion = pflag.StringP("version", "v", "3.0", "The vCard version to create.")
 
-	settings.QRCodeOutputFilePath = pflag.String("q", "vcard.png", "The path and name of the generated QR code file.")
+	settings.OutputFilePath = pflag.StringP("output", "o", "", "The path and name for the output. Will receive the extension .png for the QR code and .vcf for the vCard. Will use the input file basename by default.")
 
-	settings.VCardOutputFilePath = pflag.String("o", "vcard.vcf", "The path and name of generated vCard file.")
+	foregroundColor := pflag.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
-	foregroundColor := pflag.String("f", "black", "The foreground color of the QR code. This can be a hex RGB color value or a CSS color name.")
+	backgroundColor := pflag.StringP("background", "b", "transparent", "The background color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
-	backgroundColor := pflag.String("b", "transparent", "The background color of the QR code. This can be a hex RGB color value or a CSS color name.")
+	settings.Silent = pflag.BoolP("silent", "s", false, "Silent mode, will not interactively ask for input.")
 
 	pflag.Parse()
+
+	if *settings.InputFilePath != "" && *settings.OutputFilePath == "" {
+		base := filepath.Base(*settings.InputFilePath)                          // "file.txt"
+		*settings.OutputFilePath = strings.TrimSuffix(base, filepath.Ext(base)) // "file"
+	}
+	if *settings.OutputFilePath == "" {
+		*settings.OutputFilePath = "vcard"
+	}
+	settings.QRCodeOutputFilePath = new(string)
+	*settings.QRCodeOutputFilePath = *settings.OutputFilePath + ".png"
+	settings.VCardOutputFilePath = new(string)
+	*settings.VCardOutputFilePath = *settings.OutputFilePath + ".vcf"
+
+	//verify silent mode
+	if *settings.Silent && *settings.InputFilePath == "" {
+		return nil, errors.New("You must provide an input file when running in silent mode")
+	}
 
 	//bring the colors into the correct format
 

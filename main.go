@@ -67,5 +67,5 @@ func main() {
 }
 
 // TODO format cli help
+// TODO use a logger that reflects silent
 // TODO test
-// TODO dim colors and maybe use some color

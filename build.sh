@@ -38,13 +38,12 @@ build_for_target linux amd64 ""
 # build Linux on ARM
 build_for_target linux arm64 ""
 
-
 # Load variables from .env to see if this is running on my local dev machine
 if [ -f ".env" ]; then
     source ".env"
 fi
 if [ -n "$AT_HOME" ]; then
-    echo "I´m at home. Copying $dist/darwin/arm64/qrvc to ~/go/bin/"
+    echo "I´m at home, therefore copying $dist/darwin/arm64/qrvc to ~/go/bin/"
     cp "$dist/darwin/arm64/qrvc" ~/go/bin/
 fi
 

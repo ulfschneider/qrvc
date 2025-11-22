@@ -454,14 +454,14 @@ func repeatReadingInput() (bool, error) {
 	}
 }
 
-func cardInstance(args *settings.Settings) (vcard.Card, error) {
+func cardInstance(vcardFileName string) (vcard.Card, error) {
 
-	if *args.InputFilePath == "" {
+	if vcardFileName == "" {
 		return make(vcard.Card), nil
 	} else {
 		// use the input file as vcard content
-		fmt.Println("\nReading vCard file", cli.SprintValue(*args.InputFilePath))
-		file, err := os.Open(*args.InputFilePath)
+		fmt.Println("\nReading vCard file", cli.SprintValue(vcardFileName))
+		file, err := os.Open(vcardFileName)
 		if err != nil {
 			return nil, err
 		}
@@ -475,28 +475,30 @@ func cardInstance(args *settings.Settings) (vcard.Card, error) {
 	}
 }
 
-func PrepareVcard(args *settings.Settings) (string, error) {
+func PrepareVcard(settings *settings.Settings) (string, error) {
 
-	card, err := cardInstance(args)
+	card, err := cardInstance(*settings.InputFilePath)
 	if err != nil {
 		return "", err
 	}
 
-	for {
-		fmt.Println("\nProvide your input and press ENTER to proceed or CTRL-C to cancel.")
+	if *settings.Silent == false {
+		for {
+			fmt.Println("\nProvide your input and press ENTER to proceed or CTRL-C to cancel.")
 
-		card.SetValue(vcard.FieldVersion, *args.VCardVersion)
-		for _, prop := range inputProperties {
-			if err := scanVcardProperty(&card, &prop); err != nil {
-				return "", err
+			card.SetValue(vcard.FieldVersion, *settings.VCardVersion)
+			for _, prop := range inputProperties {
+				if err := scanVcardProperty(&card, &prop); err != nil {
+					return "", err
+				}
+
 			}
 
-		}
-
-		if readInput, err := repeatReadingInput(); err != nil {
-			return "", err
-		} else if !readInput {
-			break
+			if readInput, err := repeatReadingInput(); err != nil {
+				return "", err
+			} else if !readInput {
+				break
+			}
 		}
 	}
 

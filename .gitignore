@@ -2,3 +2,5 @@
 *.vcf
 .env
 dist
+qrvc
+main
