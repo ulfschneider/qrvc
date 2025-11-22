@@ -177,7 +177,7 @@ func setTypedVcardFieldValue(card *vcard.Card, fieldName, wantType, value string
 func scanGender(card *vcard.Card) error {
 	funcMap := template.FuncMap{
 		"formatSelected": func(option string) string {
-			if option == "Unknown" {
+			if option == "Unspecified" {
 				return ""
 			}
 			return option
