@@ -2,6 +2,7 @@ package settings
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"qrvc/internal/cli"
 	"strings"
@@ -10,8 +11,6 @@ import (
 
 	"github.com/mazznoer/csscolorparser"
 )
-
-const ApplicationName = "QRVC"
 
 type Settings struct {
 	InputFilePath        *string
@@ -26,17 +25,43 @@ type Settings struct {
 func PrepareSettings() (*Settings, error) {
 
 	settings := Settings{}
+
 	settings.InputFilePath = pflag.StringP("input", "i", "", "The path and name of the vCard input file. ")
 
 	settings.VCardVersion = pflag.StringP("version", "v", "3.0", "The vCard version to create.")
 
-	outputFilePath := pflag.StringP("output", "o", "", "The path and name for the output. Will receive the extension .png for the QR code and .vcf for the vCard. Will use the input file basename by default.")
+	outputFilePath := pflag.StringP("output", "o", "", "The path and name for the output. Please do not add any file extension, as those will be added automatically. Will receive the extension .png for the QR code and .vcf for the vCard. The input file basename will be used by default.")
 
 	foregroundColor := pflag.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
 	backgroundColor := pflag.StringP("background", "b", "transparent", "The background color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
-	settings.Silent = pflag.BoolP("silent", "s", false, "Silent mode, will not interactively ask for input.")
+	settings.Silent = pflag.BoolP("silent", "s", false, "The silent mode will not interactively ask for input and instead requires and input file.")
+
+	pflag.CommandLine.SortFlags = false
+
+	pflag.Usage = func() {
+		fmt.Println("qrvc is a commandline tool to prepare a QR code from a vCard")
+		fmt.Println("\nUsage: qrvc [flags]")
+
+		fmt.Println("\nFlags:")
+		pflag.CommandLine.VisitAll(func(f *pflag.Flag) {
+			if f.Shorthand != "" {
+				// prints: -h, --help
+				fmt.Printf("\n-%s, --%s (%s)", cli.SprintValue(f.Shorthand), cli.SprintValue(f.Name), f.Value.Type())
+			} else {
+				// prints: --name (no short version)
+				fmt.Printf("\n--%s (%s)", cli.SprintValue(f.Name), f.Value.Type())
+			}
+
+			if f.DefValue != "" {
+				fmt.Printf("\n%s (Default: %s)\n", f.Usage, cli.SprintValue(f.DefValue))
+			} else {
+				fmt.Printf("\n%s\n", f.Usage)
+			}
+		})
+
+	}
 
 	pflag.Parse()
 

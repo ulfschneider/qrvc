@@ -67,6 +67,5 @@ func main() {
 	err = run(args)
 }
 
-// TODO format cli help
-// TODO use a logger that reflects silent
 // TODO test
+// TODO documentation

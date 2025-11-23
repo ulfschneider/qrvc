@@ -484,7 +484,7 @@ func PrepareVcard(settings *settings.Settings) (string, error) {
 
 	if *settings.Silent == false {
 		for {
-			cli.Println("\nProvide your input and press ENTER to proceed or CTRL-C to cancel.")
+			cli.Println("\nProvide your input and press ENTER to proceed, or CTRL-C to cancel.")
 
 			card.SetValue(vcard.FieldVersion, *settings.VCardVersion)
 			for _, prop := range inputProperties {
