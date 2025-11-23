@@ -61,7 +61,7 @@ func main() {
 		return
 	}
 
-	cli.Println("You are running qrvc, a commandline tool to prepare a QR code from a vCard.")
+	cli.Println("You are running qrvc, a tool to prepare a QR code from a vCard.")
 	cli.Println("Get a list of options by starting the program in the form: qrvc -h")
 
 	err = run(args)
