@@ -37,7 +37,7 @@ func PrepareSettings() (*Settings, error) {
 
 	backgroundColor := pflag.StringP("background", "b", "transparent", "The background color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
-	settings.Silent = pflag.BoolP("silent", "s", false, "The silent mode will not interactively ask for input and instead requires and input file.")
+	settings.Silent = pflag.BoolP("silent", "s", false, "The silent mode will not interactively ask for input and instead requires an input file.")
 
 	pflag.CommandLine.SortFlags = false
 
