@@ -1,5 +1,9 @@
 #! /bin/bash
 echo "Building qrvc"
+
+#tidy up the go.mod file
+go mod tidy
+
 # check for vulnerabilities
 govulncheck ./...
 
