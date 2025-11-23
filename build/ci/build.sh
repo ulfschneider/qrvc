@@ -1,5 +1,10 @@
 #! /bin/bash
-echo "Building qrvc"
+if [ -f ".version" ]; then
+    source ".version"
+fi
+
+
+echo "Building qrvc $VERSION"
 
 #tidy up the go.mod file
 go mod tidy
@@ -20,7 +25,7 @@ build_for_target() {
     suffix=$3
 
     echo "Building $os/$arch"
-    GOOS=$os GOARCH=$arch go build -o "$dist/$os/$arch/${app}${suffix}" .
+    GOOS=$os GOARCH=$arch go build -ldflags="-X qrvc/internal/version.Version=$VERSION" -o "$dist/$os/$arch/${app}${suffix}" .
 }
 
 
