@@ -30,7 +30,7 @@ func PrepareSettings() (*Settings, error) {
 
 	settings.VCardVersion = pflag.StringP("version", "v", "3.0", "The vCard version to create.")
 
-	outputFilePath := pflag.StringP("output", "o", "", "The path and name for the output. Please do not add any file extension, as those will be added automatically. Will receive the extension .png for the QR code and .vcf for the vCard. The input file basename will be used by default.")
+	outputFilePath := pflag.StringP("output", "o", "", "The path and name for the output. Please do not add any file extension, as those will be added automatically.\nWill receive the extension .png for the QR code and .vcf for the vCard. The input files basename will be used by default.")
 
 	foregroundColor := pflag.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
