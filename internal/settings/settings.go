@@ -18,6 +18,8 @@ type Settings struct {
 	VCardVersion         *string
 	QRCodeOutputFilePath *string
 	VCardOutputFilePath  *string
+	Border               *bool
+	Size                 *int
 	Silent               *bool
 	BackgroundColor      *csscolorparser.Color
 	ForegroundColor      *csscolorparser.Color
@@ -36,6 +38,10 @@ func PrepareSettings() (*Settings, error) {
 	foregroundColor := pflag.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
 	backgroundColor := pflag.StringP("background", "b", "transparent", "The background color of the QR code. This can be a hex RGB color value or a CSS color name.")
+
+	settings.Border = pflag.BoolP("border", "r", false, "Whether the QR code has a border or not.")
+
+	settings.Size = pflag.IntP("size", "z", 400, "The size of the resulting QR code in width and height of pixels.")
 
 	settings.Silent = pflag.BoolP("silent", "s", false, "The silent mode will not interactively ask for input and instead requires an input file.")
 
