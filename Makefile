@@ -3,9 +3,16 @@ ARCHS := amd64 arm64
 BINARY := qrvc
 DIST := dist
 
-.PHONY: build-all
 
-build-all:
+## help: show a list of available make commands
+.PHONY: help
+help:
+	@echo "Usage:"
+	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' | sed -e 's/^/ /'
+
+## build: build the application for all targets
+.PHONY: build
+build:
 	@ . ./.version; \
 	echo "Building qrvc $$VERSION"
 
@@ -35,3 +42,9 @@ build-all:
   fi
 
 	@ echo "Ready 👋"
+
+## version: show the current application version
+.PHONY: version
+version:
+	@ . ./.version; \
+	echo $$VERSION
