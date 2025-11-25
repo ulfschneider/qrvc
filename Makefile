@@ -3,13 +3,15 @@ ARCHS := amd64 arm64
 BINARY := qrvc
 DIST := dist
 
+.PHONY: build-all
+
 build-all:
 	@ . ./.version; \
 	echo "Building qrvc $$VERSION"
 
-	@ go mod tidy
+	go mod tidy
 
-	@ govulncheck ./...
+	govulncheck ./...
 
 	@rm -rf $(DIST)
 
