@@ -27,6 +27,7 @@ build-all:
 		done
 
 
+	@#if the environment variable AT_HOME is defined in the .env file and it is not empty, execute the code
 	@ . ./.env; \
 	if [ -n "$$AT_HOME" ]; then \
     echo "I´m at home, therefore copying $(DIST)/darwin/arm64/qrvc to ~/go/bin/"; \
