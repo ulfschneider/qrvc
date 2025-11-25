@@ -3,7 +3,6 @@ ARCHS := amd64 arm64
 BINARY := qrvc
 DIST := dist
 
-
 ## help: show a list of available make commands
 .PHONY: help
 help:
@@ -24,12 +23,14 @@ build:
 
 	@ for platform in $(PLATFORMS); do \
 	    for arch in $(ARCHS); do \
-	      echo "Building for $$platform $$arch"; \
-		     if [ "$$platform" = "windows" ]; then \
-	        GOOS=$$platform GOARCH=$$arch go build -o $(DIST)/$$platform/$$arch/$(BINARY).exe .; \
-				 else \
-	        GOOS=$$platform GOARCH=$$arch go build -o $(DIST)/$$platform/$$arch/$(BINARY) .; \
-				 fi; \
+			if [ "$$platform" = "windows" ]; then \
+           target=$(DIST)/$$platform/$$arch/$(BINARY).exe; \
+         else \
+           target=$(DIST)/$$platform/$$arch/$(BINARY); \
+         fi; \
+	      echo "Building $$target"; \
+			mkdir -p $(DIST)/$$platfom/$$arch; \
+	      GOOS=$$platform GOARCH=$$arch go build -o $$target .; \
 		  done; \
 		done
 
@@ -43,7 +44,7 @@ build:
 
 	@ echo "Ready 👋"
 
-## version: show the current application version
+## version: show the current application version, change in .version file
 .PHONY: version
 version:
 	@ . ./.version; \
