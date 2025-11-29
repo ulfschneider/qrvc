@@ -2,6 +2,7 @@ PLATFORMS := windows linux darwin
 ARCHS := amd64 arm64
 BINARY := qrvc
 DIST := dist
+LICENSES := licenses
 
 ## help: show a list of available make commands
 .PHONY: help
@@ -17,11 +18,25 @@ build:
 
 	go mod tidy
 
+	go mod verify
+
+	@echo
+
+	@rm -rf $(LICENSES)
+
+	go-licenses save ./... --save_path=licenses --ignore qrvc,golang.org
+
+	@echo
+
 	govulncheck ./...
+
+	@echo
 
 	cyclonedx-gomod app -json=true -licenses=true -output sbom.json
 
 	@rm -rf $(DIST)
+
+	@echo
 
 	@ for platform in $(PLATFORMS); do \
 	    for arch in $(ARCHS); do \
@@ -40,6 +55,7 @@ build:
 	@#if the environment variable AT_HOME is defined in the .env file and it is not empty, execute the code
 	@ . ./.env; \
 	if [ -n "$$AT_HOME" ]; then \
+	 echo;\
     echo "I´m at home, therefore copying $(DIST)/darwin/arm64/qrvc to ~/go/bin/"; \
     cp "$(DIST)/darwin/arm64/qrvc" ~/go/bin/; \
   fi
@@ -51,3 +67,10 @@ build:
 version:
 	@ . ./.version; \
 	echo $$VERSION
+
+## update: update all dependencies
+.PHONY: update
+update:
+	go get -u ./...
+	go mod tidy
+	go mod verify
