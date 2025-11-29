@@ -19,6 +19,8 @@ build:
 
 	govulncheck ./...
 
+	cyclonedx-gomod app -json=true -licenses=true -output sbom.json
+
 	@rm -rf $(DIST)
 
 	@ for platform in $(PLATFORMS); do \
