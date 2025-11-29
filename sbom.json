@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:b374d597-faad-4188-8969-f2fdca2720ff",
+  "serialNumber": "urn:uuid:49b9082d-bbcd-4d20-8047-8ce84a553d24",
   "version": 1,
   "metadata": {
-    "timestamp": "2025-11-29T18:04:27+01:00",
+    "timestamp": "2025-11-29T18:08:41+01:00",
     "tools": [
       {
         "vendor": "CycloneDX",
@@ -46,11 +46,11 @@
       }
     ],
     "component": {
-      "bom-ref": "pkg:golang/qrvc@v0.0.0-20251129164757-feea98f75ce4?type=module",
+      "bom-ref": "pkg:golang/qrvc@v0.0.0-20251129170632-874b817ecd35?type=module",
       "type": "application",
       "name": "qrvc",
-      "version": "v0.0.0-20251129164757-feea98f75ce4",
-      "purl": "pkg:golang/qrvc@v0.0.0-20251129164757-feea98f75ce4?type=module\u0026goos=darwin\u0026goarch=arm64",
+      "version": "v0.0.0-20251129170632-874b817ecd35",
+      "purl": "pkg:golang/qrvc@v0.0.0-20251129170632-874b817ecd35?type=module\u0026goos=darwin\u0026goarch=arm64",
       "properties": [
         {
           "name": "cdx:gomod:build:env:CGO_ENABLED",
@@ -997,7 +997,7 @@
   ],
   "dependencies": [
     {
-      "ref": "pkg:golang/qrvc@v0.0.0-20251129164757-feea98f75ce4?type=module",
+      "ref": "pkg:golang/qrvc@v0.0.0-20251129170632-874b817ecd35?type=module",
       "dependsOn": [
         "pkg:golang/github.com/charmbracelet/huh@v0.8.0?type=module",
         "pkg:golang/github.com/emersion/go-vcard@v0.0.0-20241024213814-c9703dde27ff?type=module",

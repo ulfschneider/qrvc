@@ -122,7 +122,7 @@ func prepareForm(data *VCardFormData) *huh.Form {
 		huh.NewGroup(
 			huh.NewInput().Title("Post office box").Value(&data.PostOfficeBox),
 			huh.NewInput().Title("Street address").Value(&data.StreetAddress),
-			huh.NewInput().Title("Extended street address (e.b. building, floor)").Value(&data.ExtendedAddress),
+			huh.NewInput().Title("Extended street address (e.g. building, floor)").Value(&data.ExtendedAddress),
 			huh.NewInput().Title("City").Value(&data.Locality),
 			huh.NewInput().Title("Postal code").Value(&data.PostalCode),
 			huh.NewInput().Title("Country").Value(&data.Country),
