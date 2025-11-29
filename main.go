@@ -34,6 +34,7 @@ func finalize(err error) {
 }
 
 func main() {
+
 	var err error
 	var args *settings.Settings
 

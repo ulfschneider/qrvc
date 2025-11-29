@@ -32,7 +32,7 @@ build:
 
 	@echo
 
-	cyclonedx-gomod app -json=true -licenses=true -output sbom.json
+	cyclonedx-gomod mod -json=true -licenses=true -output=internal/sbom/sbom.json
 
 	@rm -rf $(DIST)
 
