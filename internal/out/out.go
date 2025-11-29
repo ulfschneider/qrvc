@@ -10,7 +10,7 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-func PrintResults(vcardContent string, settings *settings.Settings) error {
+func StoreResults(vcardContent string, settings *settings.Settings) error {
 	if file, err := os.Create(*settings.VCardOutputFilePath); err != nil {
 		return err
 	} else {

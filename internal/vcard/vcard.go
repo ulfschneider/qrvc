@@ -2,131 +2,141 @@ package vcard
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"qrvc/internal/cli"
 	"qrvc/internal/settings"
 	"slices"
 	"strings"
-	"text/template"
 
+	"github.com/charmbracelet/huh"
 	"github.com/emersion/go-vcard"
-	"github.com/manifoldco/promptui"
 )
 
-type label int
-
-const (
-	Undefined label = iota
-	GivenName
-	FamilyName
-	AdditionalName
-	HonorificPrefix
-	HonorificSuffix
-	Gender
-	Title
-	Organization
-	Department
-	PostOfficeBox
-	StreetAddress
-	ExtendedAddress
-	Locality
-	PostalCode
-	Country
-	EMail
-	URL
-	CellPhone
-	WorkPhone
-	PrivatePhone
-)
-
-type inputProperty struct {
-	fieldName  string
-	fieldType  string
-	fieldLabel label
+type VCardFormData struct {
+	GivenName       string
+	AdditionalName  string
+	FamilyName      string
+	HonorificPrefix string
+	HonorificSuffix string
+	Gender          vcard.Sex
+	Title           string
+	Organization    string
+	Department      string
+	PostOfficeBox   string
+	StreetAddress   string
+	ExtendedAddress string
+	Locality        string
+	PostalCode      string
+	Country         string
+	Email           string
+	Url             string
+	CellPhone       string
+	WorkPhone       string
+	HomePhone       string
+	Ready           bool
 }
 
-var inputProperties = []inputProperty{
-	{fieldName: vcard.FieldName},
-	{fieldName: vcard.FieldGender},
-	{fieldName: vcard.FieldOrganization},
-	{fieldName: vcard.FieldAddress},
-	{fieldName: vcard.FieldEmail, fieldLabel: EMail},
-	{fieldName: vcard.FieldURL, fieldLabel: URL},
-	{fieldName: vcard.FieldTelephone, fieldType: vcard.TypeCell, fieldLabel: CellPhone},
-	{fieldName: vcard.FieldTelephone, fieldType: vcard.TypeWork, fieldLabel: WorkPhone},
-	{fieldName: vcard.FieldTelephone, fieldType: vcard.TypeHome, fieldLabel: PrivatePhone},
+func maybeGet(l []string, i int) string {
+	if i < len(l) {
+		return l[i]
+	}
+	return ""
 }
 
-var labels = map[label]string{
-	GivenName:       "Given name (e.g. Harry)",
-	FamilyName:      "Family name (e.g. Potter)",
-	AdditionalName:  "Additional name (e.g. James)",
-	HonorificPrefix: "Honorific prefix (e.g. Capt.)",
-	HonorificSuffix: "Honorific suffix (e.g. Sr.)",
-	Gender:          "Gender",
-	Title:           "Job title",
-	Organization:    "Organization or company",
-	Department:      "Department",
-	PostOfficeBox:   "Post office box",
-	StreetAddress:   "Street address",
-	ExtendedAddress: "Extended address (e.g. building, floor)",
-	Locality:        "City",
-	PostalCode:      "Postal code",
-	Country:         "Country",
-	EMail:           "E-mail address",
-	URL:             "Web address (URL)",
-	CellPhone:       "Cell phone",
-	WorkPhone:       "Work phone",
-	PrivatePhone:    "Private phone",
-}
+func prepareFormData(card *vcard.Card) *VCardFormData {
 
-var labelWidth = maxLabelWidth()
+	sex, _ := card.Gender()
 
-func maxLabelWidth() int {
-	var width int
-	for _, label := range labels {
-		if len(label) > width {
-			width = len(label)
-		}
+	orgSplit := strings.SplitN(card.Value(vcard.FieldOrganization), ";", 2)
+	organization := orgSplit[0]
+	department := maybeGet(orgSplit, 1)
+
+	data := VCardFormData{
+		GivenName:       card.Name().GivenName,
+		AdditionalName:  card.Name().AdditionalName,
+		FamilyName:      card.Name().FamilyName,
+		HonorificPrefix: card.Name().HonorificPrefix,
+		HonorificSuffix: card.Name().HonorificSuffix,
+		Gender:          sex,
+		Title:           card.Value(vcard.FieldTitle),
+		Organization:    organization,
+		Department:      department,
+		PostOfficeBox:   card.Address().PostOfficeBox,
+		StreetAddress:   card.Address().StreetAddress,
+		ExtendedAddress: card.Address().ExtendedAddress,
+		Locality:        card.Address().Locality,
+		PostalCode:      card.Address().PostalCode,
+		Country:         card.Address().Country,
+		Email:           card.Value(vcard.FieldEmail),
+		Url:             card.Value(vcard.FieldURL),
+		CellPhone:       typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell),
+		WorkPhone:       typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork),
+		HomePhone:       typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome),
+		Ready:           true,
 	}
 
-	return width
+	return &data
 }
 
-func padRight(label string, width int, pad rune) string {
-	padding := make([]rune, width-len(label))
-	for i := range padding {
-		padding[i] = pad
-	}
-	return label + string(padding) + " "
+func prepareVCardData(card *vcard.Card, data *VCardFormData) {
+	card.SetGender(vcard.Sex(data.Gender), "")
+	card.SetValue(vcard.FieldOrganization, data.Organization+";"+data.Department)
+	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell, data.CellPhone)
+	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork, data.WorkPhone)
+	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome, data.HomePhone)
 }
 
-func formatLabel(label string) string {
-	return fmt.Sprintf("%s", padRight(label, labelWidth, '.'))
-}
+func prepareForm(data *VCardFormData) *huh.Form {
 
-func scanString(label, defaultValue string) (string, error) {
+	vCardForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().Title("Given (first) name").Value(&data.GivenName),
+			huh.NewInput().Title("Additional (middle) name").Value(&data.AdditionalName),
+			huh.NewInput().Title("Family name").Value(&data.FamilyName),
+			huh.NewInput().Title("Honorific prefix (e.g. Capt.)").Value(&data.HonorificPrefix),
+			huh.NewInput().Title("Honorific suffix (e.g. Sr.)").Value(&data.HonorificSuffix),
+		),
+		huh.NewGroup(
+			huh.NewSelect[vcard.Sex]().Title("Gender").Options(
+				huh.NewOption("Male", vcard.SexMale).Selected(vcard.SexMale == data.Gender),
+				huh.NewOption("Female", vcard.SexFemale).Selected(vcard.SexFemale == data.Gender),
+				huh.NewOption("Other", vcard.SexOther).Selected(vcard.SexOther == data.Gender),
+				huh.NewOption("Unspecified", vcard.SexUnspecified).Selected(data.Gender != vcard.SexMale && data.Gender != vcard.SexFemale && data.Gender != vcard.SexUnspecified),
+			).Value(&data.Gender),
+		),
+		huh.NewGroup(
+			huh.NewInput().Title("Job title").Value(&data.Title),
+			huh.NewInput().Title("Organization or company").Value(&data.Organization),
+			huh.NewInput().Title("Department").Value(&data.Department),
+		),
 
-	templates := &promptui.PromptTemplates{
-		Prompt:  "{{ . }}: ",
-		Valid:   "{{ . }}: ",
-		Invalid: "{{ . }}: ",
-		Success: "{{ . }}: ",
-	}
-	prompt := promptui.Prompt{
-		Label:     formatLabel(label),
-		Default:   defaultValue,
-		Templates: templates,
-	}
+		huh.NewGroup(
+			huh.NewInput().Title("Mail").Value(&data.Email),
+			huh.NewInput().Title("Web address").Value(&data.Url),
+			huh.NewInput().Title("Cell phone").Value(&data.CellPhone),
+			huh.NewInput().Title("Work phone").Value(&data.WorkPhone),
+			huh.NewInput().Title("Private phone").Value(&data.HomePhone),
+		),
 
-	value, err := prompt.Run()
-	if err != nil {
-		return "", err
-	}
+		huh.NewGroup(
+			huh.NewInput().Title("Post office box").Value(&data.PostOfficeBox),
+			huh.NewInput().Title("Street address").Value(&data.StreetAddress),
+			huh.NewInput().Title("Extended street address (e.b. building, floor)").Value(&data.ExtendedAddress),
+			huh.NewInput().Title("City").Value(&data.Locality),
+			huh.NewInput().Title("Postal code").Value(&data.PostalCode),
+			huh.NewInput().Title("Country").Value(&data.Country),
+		),
 
-	return strings.TrimSpace(value), nil
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Are you ready?").
+				Affirmative("Yes, print the result!").
+				Negative("No, I´m not ready.").
+				Value(&data.Ready),
+		),
+	).WithTheme(huh.ThemeBase16())
+	return vCardForm
 }
 
 func typedVcardFieldValue(card *vcard.Card, fieldName, wantType string) string {
@@ -140,7 +150,7 @@ func typedVcardFieldValue(card *vcard.Card, fieldName, wantType string) string {
 	}
 
 	for _, f := range typedFields {
-		if f.Params.HasType(strings.ToUpper(wantType)) {
+		if f.Params.HasType(wantType) {
 			return f.Value
 		}
 	}
@@ -168,240 +178,9 @@ func setTypedVcardFieldValue(card *vcard.Card, fieldName, wantType, value string
 	card.Add(fieldName, &vcard.Field{
 		Value: value,
 		Params: map[string][]string{
-			"TYPE": {strings.ToUpper(wantType)},
+			"TYPE": {wantType},
 		},
 	})
-
-}
-
-func scanGender(card *vcard.Card) error {
-	funcMap := template.FuncMap{
-		"formatSelected": func(option string) string {
-			if option == "Unspecified" {
-				return ""
-			}
-			return option
-		},
-		"faint": func(option string) string {
-			return "\033[2m" + option + "\033[0m"
-		},
-	}
-
-	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}:",
-		Active:   "> {{ . }}",
-		Inactive: "  {{ . }}",
-		Selected: formatLabel(labels[Gender]) + ": {{ formatSelected . }}",
-		FuncMap:  funcMap,
-	}
-
-	if templates.FuncMap == nil {
-		templates.FuncMap = make(template.FuncMap)
-	}
-
-	genders := []string{"Male", "Female", "Other", "Unspecified"}
-	defaultValue, _ := card.Gender()
-
-	var cursorPos int
-	switch defaultValue {
-	case vcard.SexMale:
-		cursorPos = 0
-	case vcard.SexFemale:
-		cursorPos = 1
-	case vcard.SexOther:
-		cursorPos = 2
-	default:
-		cursorPos = 3
-	}
-
-	prompt := promptui.Select{
-		Label:     "Select the gender or leave it unset",
-		Items:     genders,
-		CursorPos: cursorPos,
-		Templates: templates,
-	}
-
-	_, result, err := prompt.Run()
-	if err != nil {
-		return err
-	}
-
-	switch result {
-	case "Male":
-		card.SetGender(vcard.SexMale, "")
-
-	case "Female":
-		card.SetGender(vcard.SexFemale, "")
-	case "Other":
-		card.SetGender(vcard.SexOther, "")
-	default:
-		card.SetGender(vcard.SexUnspecified, "")
-	}
-	return nil
-}
-
-func scanName(card *vcard.Card) error {
-	name := card.Name()
-	if name == nil {
-		name = &vcard.Name{}
-	}
-
-	if givenName, err := scanString(labels[GivenName], name.GivenName); err != nil {
-		return err
-	} else {
-		name.GivenName = givenName
-	}
-
-	if familyName, err := scanString(labels[FamilyName], name.FamilyName); err != nil {
-		return err
-	} else {
-		name.FamilyName = familyName
-	}
-
-	if additionalName, err := scanString(labels[AdditionalName], name.AdditionalName); err != nil {
-		return err
-	} else {
-		name.AdditionalName = additionalName
-	}
-
-	if honorifixPrefix, err := scanString(labels[HonorificPrefix], name.HonorificPrefix); err != nil {
-		return err
-	} else {
-		name.HonorificPrefix = honorifixPrefix
-	}
-
-	if honorificSuffix, err := scanString(labels[HonorificSuffix], name.HonorificSuffix); err != nil {
-		return err
-	} else {
-		name.HonorificSuffix = honorificSuffix
-	}
-
-	card.SetName(name)
-
-	return nil
-}
-
-func scanOrg(card *vcard.Card) error {
-
-	title, err := scanString(labels[Title], card.Value(vcard.FieldTitle))
-	if err != nil {
-		return err
-	}
-
-	card.SetValue(vcard.FieldTitle, title)
-
-	orgSplit := strings.Split(card.Value(vcard.FieldOrganization), ";")
-	orgDefault := ""
-	departmentDefault := ""
-	if len(orgSplit) > 0 {
-		orgDefault = orgSplit[0]
-	}
-	if len(orgSplit) > 1 {
-		departmentDefault = orgSplit[1]
-	}
-
-	org, err := scanString(labels[Organization], orgDefault)
-	if err != nil {
-		return err
-	}
-
-	department, err := scanString(labels[Department], departmentDefault)
-	if err != nil {
-		return err
-	}
-
-	card.SetValue(vcard.FieldOrganization, org+";"+department)
-
-	return nil
-}
-
-func scanAddress(card *vcard.Card) error {
-	address := card.Address()
-	if address == nil {
-		address = &vcard.Address{}
-	}
-
-	if postOfficeBox, err := scanString(labels[PostOfficeBox], address.PostOfficeBox); err != nil {
-		return err
-	} else {
-		address.PostOfficeBox = postOfficeBox
-	}
-
-	if streetAddress, err := scanString(labels[StreetAddress], address.StreetAddress); err != nil {
-		return err
-	} else {
-		address.StreetAddress = streetAddress
-	}
-
-	if extendedAddress, err := scanString(labels[ExtendedAddress], address.ExtendedAddress); err != nil {
-		return err
-	} else {
-		address.ExtendedAddress = extendedAddress
-	}
-
-	if locality, err := scanString(labels[Locality], address.Locality); err != nil {
-		return err
-	} else {
-		address.Locality = locality
-	}
-
-	if postalCode, err := scanString(labels[PostalCode], address.PostalCode); err != nil {
-		return err
-	} else {
-		address.PostalCode = postalCode
-	}
-
-	if country, err := scanString(labels[Country], address.Country); err != nil {
-		return err
-	} else {
-		address.Country = country
-	}
-
-	card.SetAddress(address)
-
-	return nil
-}
-
-func scanVcardProperty(card *vcard.Card, prop *inputProperty) error {
-
-	switch prop.fieldName {
-	case vcard.FieldName:
-		fmt.Println()
-		if err := scanName(card); err != nil {
-			return err
-		}
-	case vcard.FieldAddress:
-		fmt.Println()
-		if err := scanAddress(card); err != nil {
-			return err
-		}
-		fmt.Println()
-	case vcard.FieldGender:
-		fmt.Println()
-		if err := scanGender(card); err != nil {
-			return err
-		}
-	case vcard.FieldOrganization:
-		fmt.Println()
-		if err := scanOrg(card); err != nil {
-			return err
-		}
-	default:
-		if s, err := scanString(labels[prop.fieldLabel], typedVcardFieldValue(card, prop.fieldName, prop.fieldType)); err != nil {
-			return err
-		} else {
-			setTypedVcardFieldValue(card, prop.fieldName, prop.fieldType, s)
-		}
-	}
-
-	name := card.Name()
-	if name.GivenName != "" || name.FamilyName != "" {
-		card.SetValue("FN", strings.Join(strings.Fields(name.HonorificPrefix+" "+name.GivenName+" "+name.AdditionalName+" "+name.FamilyName+" "+name.HonorificSuffix), " "))
-	} else {
-		card.SetValue("FN", card.Value("ORG"))
-	}
-
-	return nil
 }
 
 func encodeVcard(card *vcard.Card) (string, error) {
@@ -423,45 +202,30 @@ func decodeVcard(reader io.Reader) (vcard.Card, error) {
 	return card, nil
 }
 
-func repeatReadingInput() (bool, error) {
-	fmt.Println()
-
-	label := "Do you want to edit your input?"
-
-	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}",
-		Active:   "> {{ . }}",
-		Inactive: "  {{ . }}",
-		Selected: label + " {{ . }}",
+func ensureNullSafety(card *vcard.Card) {
+	if card.Name() == nil {
+		name := vcard.Name{}
+		card.SetName(&name)
 	}
-
-	prompt := promptui.Select{
-		Label:     label,
-		Items:     []string{"I am ready! Print the results.", "Let me change some input."},
-		Templates: templates,
-		CursorPos: 0,
-	}
-
-	cursorPos, _, err := prompt.Run()
-	if err != nil {
-		return false, err
-	}
-
-	if cursorPos == 1 {
-		return true, nil
-	} else {
-		return false, nil
+	if card.Address() == nil {
+		address := vcard.Address{}
+		card.SetAddress(&address)
 	}
 }
 
-func cardInstance(vcardFileName string) (vcard.Card, error) {
+func cardInstance(settings *settings.Settings) (*vcard.Card, error) {
 
-	if vcardFileName == "" {
-		return make(vcard.Card), nil
+	if *settings.InputFilePath == "" {
+		card := make(vcard.Card)
+		card.SetValue(vcard.FieldVersion, *settings.VCardVersion)
+		ensureNullSafety(&card)
+		return &card, nil
 	} else {
 		// use the input file as vcard content
-		cli.Println("\nReading vCard file", cli.SprintValue(vcardFileName))
-		file, err := os.Open(vcardFileName)
+		cli.Println()
+		cli.Println("Reading vCard file", cli.SprintValue(*settings.InputFilePath))
+		cli.Println()
+		file, err := os.Open(*settings.InputFilePath)
 		if err != nil {
 			return nil, err
 		}
@@ -470,37 +234,36 @@ func cardInstance(vcardFileName string) (vcard.Card, error) {
 		if card, err := decodeVcard(file); err != nil {
 			return nil, err
 		} else {
-			return card, nil
+			ensureNullSafety(&card)
+			return &card, nil
 		}
 	}
 }
 
 func PrepareVcard(settings *settings.Settings) (string, error) {
 
-	card, err := cardInstance(*settings.InputFilePath)
+	card, err := cardInstance(settings)
 	if err != nil {
 		return "", err
 	}
 
-	if *settings.Silent == false {
-		for {
-			cli.Println("\nProvide your input and press ENTER to proceed, or CTRL-C to cancel.")
-
-			card.SetValue(vcard.FieldVersion, *settings.VCardVersion)
-			for _, prop := range inputProperties {
-				if err := scanVcardProperty(&card, &prop); err != nil {
-					return "", err
-				}
-
-			}
-
-			if readInput, err := repeatReadingInput(); err != nil {
-				return "", err
-			} else if !readInput {
-				break
-			}
-		}
+	if *settings.Silent {
+		return encodeVcard(card)
 	}
 
-	return encodeVcard(&card)
+	formData := prepareFormData(card)
+
+	for {
+		form := prepareForm(formData)
+		if err := form.Run(); err != nil {
+			return "", err
+		}
+		if formData.Ready {
+			break
+		}
+	}
+	prepareVCardData(card, formData)
+
+	return encodeVcard(card)
+
 }

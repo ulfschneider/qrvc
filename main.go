@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"qrvc/internal/cli"
 	"qrvc/internal/out"
 	"qrvc/internal/settings"
 	"qrvc/internal/vcard"
 
-	"github.com/manifoldco/promptui"
+	"github.com/charmbracelet/huh"
 )
 
 func run(settings *settings.Settings) error {
@@ -16,18 +18,19 @@ func run(settings *settings.Settings) error {
 		return err
 	}
 
-	return out.PrintResults(vcardContent, settings)
+	return out.StoreResults(vcardContent, settings)
 }
 
 func finalize(err error) {
-	if err == promptui.ErrInterrupt {
-		cli.Println("You stopped via CTRL-C")
+	if errors.Is(err, huh.ErrUserAborted) {
+		// User pressed Ctrl-C
+		fmt.Println("You stopped with CTRL-C")
+		return
 	} else if err != nil {
 		cli.Println(err)
 	}
 
 	cli.Println("👋")
-
 }
 
 func main() {
