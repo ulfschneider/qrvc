@@ -24,7 +24,7 @@ build:
 
 	@rm -rf $(LICENSES)
 
-	go-licenses save ./... --save_path=licenses --ignore qrvc,golang.org
+	go-licenses save ./... --save_path=$(LICENSES) --ignore qrvc,golang.org
 
 	@echo
 
@@ -32,11 +32,7 @@ build:
 
 	@echo
 
-	cyclonedx-gomod mod -json=true -licenses=true -output=internal/sbom/sbom.json
-
 	@rm -rf $(DIST)
-
-	@echo
 
 	@ for platform in $(PLATFORMS); do \
 	    for arch in $(ARCHS); do \
@@ -45,20 +41,21 @@ build:
          else \
            target=$(DIST)/$$platform/$$arch/$(BINARY); \
          fi; \
-	      echo "Building $$target"; \
 			mkdir -p $(DIST)/$$platfom/$$arch; \
-	      GOOS=$$platform GOARCH=$$arch go build -o $$target .; \
-		  done; \
-		done
+			echo "Building $$target";\
+			GOOS=$$platform GOARCH=$$arch cyclonedx-gomod app -json=true -licenses=true -output=internal/sbom/sbom.json;\
+			GOOS=$$platform GOARCH=$$arch go build -o $$target .; \
+		 done; \
+	done
 
 
 	@#if the environment variable AT_HOME is defined in the .env file and it is not empty, execute the code
 	@ . ./.env; \
 	if [ -n "$$AT_HOME" ]; then \
-	 echo;\
-    echo "I´m at home, therefore copying $(DIST)/darwin/arm64/qrvc to ~/go/bin/"; \
-    cp "$(DIST)/darwin/arm64/qrvc" ~/go/bin/; \
-  fi
+	   echo;\
+      echo "I´m at home, therefore copying $(DIST)/darwin/arm64/qrvc to ~/go/bin/"; \
+      cp "$(DIST)/darwin/arm64/qrvc" ~/go/bin/; \
+   fi
 
 	@ echo "Ready 👋"
 
