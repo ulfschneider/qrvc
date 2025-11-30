@@ -5,4 +5,5 @@ dist
 qrvc
 main
 sbom.json
+licenses/
 .DS_Store

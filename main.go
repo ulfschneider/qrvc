@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"qrvc/internal/cli"
 	"qrvc/internal/out"
 	"qrvc/internal/settings"
 	"qrvc/internal/vcard"
@@ -27,10 +26,10 @@ func finalize(err error) {
 		fmt.Println("You stopped with CTRL-C")
 		return
 	} else if err != nil {
-		cli.Println(err)
+		fmt.Println(err)
 	}
 
-	cli.Println("👋")
+	fmt.Println("👋")
 }
 
 func main() {
@@ -46,8 +45,10 @@ func main() {
 		return
 	}
 
-	cli.Println("You are running qrvc, a tool to prepare a QR code from a vCard.")
-	cli.Println("Get a list of options by starting the program in the form: qrvc -h")
+	fmt.Println("You are running qrvc, a tool to prepare a QR code from a vCard.")
+	fmt.Println("Get a list of options by starting the program in the form: qrvc -h")
+	fmt.Println("Stop the program by pressing CTRL-C.")
+	fmt.Println()
 
 	err = run(args)
 }

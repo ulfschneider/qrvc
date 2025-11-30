@@ -222,7 +222,6 @@ func cardInstance(settings *settings.Settings) (*vcard.Card, error) {
 		return &card, nil
 	} else {
 		// use the input file as vcard content
-		cli.Println()
 		cli.Println("Reading vCard file", cli.SprintValue(*settings.InputFilePath))
 		cli.Println()
 		file, err := os.Open(*settings.InputFilePath)
