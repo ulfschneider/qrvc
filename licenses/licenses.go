@@ -1,8 +1,8 @@
-package sbom
+package licenses
 
 import (
 	"embed"
 )
 
 //go:embed generated/*
-var SBOMFS embed.FS
+var LicensesFS embed.FS

@@ -2,6 +2,5 @@
 *.vcf
 .env
 dist
-qrvc
 */generated/*
 .DS_Store
