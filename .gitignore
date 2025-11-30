@@ -2,5 +2,6 @@
 *.vcf
 .env
 dist
-*/generated/*
+**/generated/**
+!**/generated/.gitkeep
 .DS_Store
