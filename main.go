@@ -52,5 +52,6 @@ func main() {
 	err = run(args)
 }
 
+// TODO sbom for each build target
 // TODO test
 // TODO documentation
