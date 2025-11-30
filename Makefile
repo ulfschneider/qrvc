@@ -3,6 +3,7 @@ ARCHS := amd64 arm64
 BINARY := qrvc
 DIST := dist
 LICENSES := licenses
+SBOM  := internal/sbom/sbom.json
 
 ## help: show a list of available make commands
 .PHONY: help
@@ -16,19 +17,7 @@ build:
 	@ . ./.version; \
 	echo "Building qrvc $$VERSION"
 
-	go mod tidy
-
-	go mod verify
-
-	@echo
-
-	@rm -rf $(LICENSES)
-
-	go-licenses save ./... --save_path=$(LICENSES) --ignore qrvc,golang.org
-
-	@echo
-
-	govulncheck ./...
+	@ $(MAKE) update
 
 	@rm -rf $(DIST)
 
@@ -42,7 +31,11 @@ build:
 			mkdir -p $(DIST)/$$platform/$$arch; \
 			echo;\
 			echo "Creating SBOM for $$target";\
-			GOOS=$$platform GOARCH=$$arch cyclonedx-gomod app -json=true -licenses=true -output=internal/sbom/sbom.json;\
+			rm -rf $(SBOM)\
+			GOOS=$$platform GOARCH=$$arch cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM);\
+			echo "Detecting licenses";\
+			rm -rf $(LICENSES);\
+			go-licenses save ./... --save_path=$(LICENSES) --ignore qrvc,golang.org ;\
 			echo "Building $$target";\
 			GOOS=$$platform GOARCH=$$arch go build -o $$target .; \
 		 done; \
@@ -65,9 +58,15 @@ version:
 	@ . ./.version; \
 	echo $$VERSION
 
-## update: update all dependencies
+## update: update all dependencies and perform a check
 .PHONY: update
 update:
 	go get -u ./...
+	@ $(MAKE) check
+
+## check: tidy up the go.mod file and do a vulnerability check
+.PHONY: check
+check:
 	go mod tidy
 	go mod verify
+	govulncheck ./...
