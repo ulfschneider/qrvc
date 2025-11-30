@@ -30,8 +30,6 @@ build:
 
 	govulncheck ./...
 
-	@echo
-
 	@rm -rf $(DIST)
 
 	@ for platform in $(PLATFORMS); do \
@@ -41,9 +39,11 @@ build:
          else \
            target=$(DIST)/$$platform/$$arch/$(BINARY); \
          fi; \
-			mkdir -p $(DIST)/$$platfom/$$arch; \
-			echo "Building $$target";\
+			mkdir -p $(DIST)/$$platform/$$arch; \
+			echo;\
+			echo "Creating SBOM for $$target";\
 			GOOS=$$platform GOARCH=$$arch cyclonedx-gomod app -json=true -licenses=true -output=internal/sbom/sbom.json;\
+			echo "Building $$target";\
 			GOOS=$$platform GOARCH=$$arch go build -o $$target .; \
 		 done; \
 	done
