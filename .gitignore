@@ -3,7 +3,5 @@
 .env
 dist
 qrvc
-main
-sbom.json
-licenses/
+*/generated/*
 .DS_Store

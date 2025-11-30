@@ -2,8 +2,8 @@ PLATFORMS := windows linux darwin
 ARCHS := amd64 arm64
 BINARY := qrvc
 DIST := dist
-LICENSES := licenses
-SBOM  := internal/sbom/sbom.json
+LICENSES := licenses/generated
+SBOM  := sbom/generated/sbom.json
 
 ## help: show a list of available make commands
 .PHONY: help
@@ -31,7 +31,6 @@ build:
 			mkdir -p $(DIST)/$$platform/$$arch; \
 			echo;\
 			echo "Creating SBOM for $$target";\
-			rm -rf $(SBOM)\
 			GOOS=$$platform GOARCH=$$arch cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM);\
 			echo "Detecting licenses";\
 			rm -rf $(LICENSES);\
