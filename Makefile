@@ -29,14 +29,11 @@ build:
            target=$(DIST)/$$platform/$$arch/$(BINARY); \
          fi; \
 			mkdir -p $(DIST)/$$platform/$$arch; \
-			echo;\
-			echo "Creating SBOM for $$target";\
-			GOOS=$$platform GOARCH=$$arch cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM);\
-			echo "Detecting licenses";\
-			rm -rf $(LICENSES);\
-			go-licenses save ./... --save_path=$(LICENSES) --ignore qrvc,golang.org ;\
-			echo "Building $$target";\
-			GOOS=$$platform GOARCH=$$arch go build -o $$target .; \
+			echo; \
+			echo "Creating SBOM for $$target"; \
+			GOOS=$$platform GOARCH=$$arch cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM); \
+			echo "Building $$target"; \
+			GOOS=$$platform GOARCH=$$arch go build -o $$target . ; \
 		 done; \
 	done
 
@@ -68,5 +65,7 @@ update:
 check:
 	go mod tidy
 	go mod verify
-	go-licenses check ./... --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0
+	go-licenses check ./... --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0 --ignore qrvc,golang.org
+	rm -rf $(LICENSES);
+	go-licenses save ./... --save_path=$(LICENSES) --ignore qrvc,golang.org
 	govulncheck ./...
