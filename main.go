@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"qrvc/internal/cli"
 	"qrvc/internal/out"
 	"qrvc/internal/settings"
 	"qrvc/internal/vcard"
@@ -26,7 +27,7 @@ func finalize(err error) {
 		fmt.Println("You stopped with CTRL-C")
 		return
 	} else if err != nil {
-		fmt.Println(err)
+		fmt.Println(errors.Unwrap(err))
 	}
 
 	fmt.Println("👋")
@@ -46,13 +47,12 @@ func main() {
 	}
 
 	fmt.Println("You are running qrvc, a tool to prepare a QR code from a vCard.")
-	fmt.Println("Get a list of options by starting the program in the form: qrvc -h")
-	fmt.Println("Stop the program by pressing CTRL-C.")
+	fmt.Println("Get a list of options by starting the program in the form:", cli.SprintValue("qrvc -h"))
+	fmt.Println("Stop the program by pressing", cli.SprintValue("CTRL-C"))
 	fmt.Println()
 
 	err = run(args)
 }
 
-// TODO sbom for each build target
 // TODO test
 // TODO documentation

@@ -9,8 +9,11 @@ require (
 )
 
 require (
+	github.com/CycloneDX/cyclonedx-go v0.9.3
 	github.com/charmbracelet/huh v0.8.0
 	github.com/fatih/color v1.18.0
+	github.com/package-url/packageurl-go v0.1.3
+	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.10
 )
 
@@ -24,9 +27,9 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0 // indirect
 	github.com/charmbracelet/x/ansi v0.11.2 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.14 // indirect
-	github.com/charmbracelet/x/exp/strings v0.0.0-20251126160633-0b68cdcd21da // indirect
+	github.com/charmbracelet/x/exp/strings v0.0.0-20251201173703-9f73bfd934ff // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
-	github.com/clipperhouse/displaywidth v0.6.0 // indirect
+	github.com/clipperhouse/displaywidth v0.6.1 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect

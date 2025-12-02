@@ -2,7 +2,7 @@ PLATFORMS := windows linux darwin
 ARCHS := amd64 arm64
 BINARY := qrvc
 DIST := dist
-LICENSES := licenses/generated
+LICENSES := sbom/generated/licenses
 SBOM  := sbom/generated/sbom.json
 
 ## help: show a list of available make commands
@@ -68,4 +68,5 @@ update:
 check:
 	go mod tidy
 	go mod verify
+	go-licenses check ./... --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0
 	govulncheck ./...
