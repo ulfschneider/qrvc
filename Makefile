@@ -69,3 +69,8 @@ check:
 	rm -rf $(LICENSES);
 	go-licenses save ./... --save_path=$(LICENSES) --ignore qrvc,golang.org
 	govulncheck ./...
+
+## vul: make a vulnerability check with verbose logging
+.PHONY: vul
+vul:
+	govulncheck -show verbose ./...

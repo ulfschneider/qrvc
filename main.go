@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"qrvc/internal/cli"
-	"qrvc/internal/out"
-	"qrvc/internal/settings"
-	"qrvc/internal/vcard"
+
+	"github.com/ulfschneider/qrvc/internal/cli"
+	"github.com/ulfschneider/qrvc/internal/out"
+	"github.com/ulfschneider/qrvc/internal/settings"
+	"github.com/ulfschneider/qrvc/internal/vcard"
 
 	"github.com/charmbracelet/huh"
 )

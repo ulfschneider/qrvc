@@ -2,39 +2,34 @@ package vcard
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
-	"qrvc/internal/cli"
-	"qrvc/internal/settings"
+	"path/filepath"
 	"slices"
 	"strings"
 
+	"github.com/ulfschneider/qrvc/internal/cli"
+	"github.com/ulfschneider/qrvc/internal/settings"
+
 	"github.com/charmbracelet/huh"
 	"github.com/emersion/go-vcard"
+	"github.com/pkg/errors"
 )
 
 type VCardFormData struct {
-	GivenName       string
-	AdditionalName  string
-	FamilyName      string
-	HonorificPrefix string
-	HonorificSuffix string
-	Gender          vcard.Sex
-	Title           string
-	Organization    string
-	Department      string
-	PostOfficeBox   string
-	StreetAddress   string
-	ExtendedAddress string
-	Locality        string
-	PostalCode      string
-	Country         string
-	Email           string
-	Url             string
-	CellPhone       string
-	WorkPhone       string
-	HomePhone       string
-	Ready           bool
+	Name         vcard.Name
+	Gender       vcard.Sex
+	Title        string
+	Organization string
+	Department   string
+	Address      vcard.Address
+	Email        string
+	Url          string
+	CellPhone    string
+	WorkPhone    string
+	HomePhone    string
+	Ready        bool
 }
 
 func maybeGet(l []string, i int) string {
@@ -53,79 +48,75 @@ func prepareFormData(card *vcard.Card) *VCardFormData {
 	department := maybeGet(orgSplit, 1)
 
 	data := VCardFormData{
-		GivenName:       card.Name().GivenName,
-		AdditionalName:  card.Name().AdditionalName,
-		FamilyName:      card.Name().FamilyName,
-		HonorificPrefix: card.Name().HonorificPrefix,
-		HonorificSuffix: card.Name().HonorificSuffix,
-		Gender:          sex,
-		Title:           card.Value(vcard.FieldTitle),
-		Organization:    organization,
-		Department:      department,
-		PostOfficeBox:   card.Address().PostOfficeBox,
-		StreetAddress:   card.Address().StreetAddress,
-		ExtendedAddress: card.Address().ExtendedAddress,
-		Locality:        card.Address().Locality,
-		PostalCode:      card.Address().PostalCode,
-		Country:         card.Address().Country,
-		Email:           card.Value(vcard.FieldEmail),
-		Url:             card.Value(vcard.FieldURL),
-		CellPhone:       typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell),
-		WorkPhone:       typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork),
-		HomePhone:       typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome),
-		Ready:           true,
+		Name:         *card.Name(),
+		Gender:       sex,
+		Title:        card.Value(vcard.FieldTitle),
+		Organization: organization,
+		Department:   department,
+		Address:      *card.Address(),
+		Email:        card.Value(vcard.FieldEmail),
+		Url:          card.Value(vcard.FieldURL),
+		CellPhone:    typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell),
+		WorkPhone:    typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork),
+		HomePhone:    typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome),
+		Ready:        true,
 	}
 
 	return &data
 }
 
-func prepareVCardData(card *vcard.Card, data *VCardFormData) {
-	card.SetGender(vcard.Sex(data.Gender), "")
-	card.SetValue(vcard.FieldOrganization, data.Organization+";"+data.Department)
-	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell, data.CellPhone)
-	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork, data.WorkPhone)
-	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome, data.HomePhone)
+func transferFormData(card *vcard.Card, formData *VCardFormData) {
+	card.SetName(&formData.Name)
+	card.SetGender(vcard.Sex(formData.Gender), "")
+	card.SetValue(vcard.FieldTitle, formData.Title)
+	card.SetValue(vcard.FieldOrganization, formData.Organization+";"+formData.Department)
+	card.SetAddress(&formData.Address)
+	card.SetValue(vcard.FieldEmail, formData.Email)
+	card.SetValue(vcard.FieldURL, formData.Url)
+	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell, formData.CellPhone)
+	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork, formData.WorkPhone)
+	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome, formData.HomePhone)
 }
 
-func prepareForm(data *VCardFormData) *huh.Form {
+func prepareForm(formData *VCardFormData) *huh.Form {
 
 	vCardForm := huh.NewForm(
 		huh.NewGroup(
-			huh.NewInput().Title("Given (first) name").Value(&data.GivenName),
-			huh.NewInput().Title("Additional (middle) name").Value(&data.AdditionalName),
-			huh.NewInput().Title("Family name").Value(&data.FamilyName),
-			huh.NewInput().Title("Honorific prefix (e.g. Capt.)").Value(&data.HonorificPrefix),
-			huh.NewInput().Title("Honorific suffix (e.g. Sr.)").Value(&data.HonorificSuffix),
+			huh.NewInput().Title("Given (first) name").Value(&formData.Name.GivenName),
+			huh.NewInput().Title("Additional (middle) name").Value(&formData.Name.AdditionalName),
+			huh.NewInput().Title("Family name").Value(&formData.Name.FamilyName),
+			huh.NewInput().Title("Honorific prefix (e.g. Capt.)").Value(&formData.Name.HonorificPrefix),
+			huh.NewInput().Title("Honorific suffix (e.g. Sr.)").Value(&formData.Name.HonorificSuffix),
 		),
 		huh.NewGroup(
 			huh.NewSelect[vcard.Sex]().Title("Gender").Options(
-				huh.NewOption("Male", vcard.SexMale).Selected(vcard.SexMale == data.Gender),
-				huh.NewOption("Female", vcard.SexFemale).Selected(vcard.SexFemale == data.Gender),
-				huh.NewOption("Other", vcard.SexOther).Selected(vcard.SexOther == data.Gender),
-				huh.NewOption("Unspecified", vcard.SexUnspecified).Selected(data.Gender != vcard.SexMale && data.Gender != vcard.SexFemale && data.Gender != vcard.SexUnspecified),
-			).Value(&data.Gender),
+				huh.NewOption("Male", vcard.SexMale).Selected(vcard.SexMale == formData.Gender),
+				huh.NewOption("Female", vcard.SexFemale).Selected(vcard.SexFemale == formData.Gender),
+				huh.NewOption("Other", vcard.SexOther).Selected(vcard.SexOther == formData.Gender),
+				huh.NewOption("Unspecified", vcard.SexUnspecified).Selected(formData.Gender != vcard.SexMale && formData.Gender != vcard.SexFemale && formData.Gender != vcard.SexUnspecified),
+			).Value(&formData.Gender),
 		),
 		huh.NewGroup(
-			huh.NewInput().Title("Job title").Value(&data.Title),
-			huh.NewInput().Title("Organization or company").Value(&data.Organization),
-			huh.NewInput().Title("Department").Value(&data.Department),
-		),
-
-		huh.NewGroup(
-			huh.NewInput().Title("Mail").Value(&data.Email),
-			huh.NewInput().Title("Web address").Value(&data.Url),
-			huh.NewInput().Title("Cell phone").Value(&data.CellPhone),
-			huh.NewInput().Title("Work phone").Value(&data.WorkPhone),
-			huh.NewInput().Title("Private phone").Value(&data.HomePhone),
+			huh.NewInput().Title("Job title").Value(&formData.Title),
+			huh.NewInput().Title("Organization or company").Value(&formData.Organization),
+			huh.NewInput().Title("Department").Value(&formData.Department),
 		),
 
 		huh.NewGroup(
-			huh.NewInput().Title("Post office box").Value(&data.PostOfficeBox),
-			huh.NewInput().Title("Street address").Value(&data.StreetAddress),
-			huh.NewInput().Title("Extended street address (e.g. building, floor)").Value(&data.ExtendedAddress),
-			huh.NewInput().Title("City").Value(&data.Locality),
-			huh.NewInput().Title("Postal code").Value(&data.PostalCode),
-			huh.NewInput().Title("Country").Value(&data.Country),
+			huh.NewInput().Title("Mail").Value(&formData.Email),
+			huh.NewInput().Title("Web address").Value(&formData.Url),
+			huh.NewInput().Title("Cell phone").Value(&formData.CellPhone),
+			huh.NewInput().Title("Work phone").Value(&formData.WorkPhone),
+			huh.NewInput().Title("Private phone").Value(&formData.HomePhone),
+		),
+
+		huh.NewGroup(
+			huh.NewInput().Title("Post office box").Value(&formData.Address.PostOfficeBox),
+			huh.NewInput().Title("Street address").Value(&formData.Address.StreetAddress),
+			huh.NewInput().Title("Extended street address (e.g. building, floor)").Value(&formData.Address.ExtendedAddress),
+			huh.NewInput().Title("City").Value(&formData.Address.Locality),
+			huh.NewInput().Title("Postal code").Value(&formData.Address.PostalCode),
+			huh.NewInput().Title("Country").Value(&formData.Address.Country),
 		),
 
 		huh.NewGroup(
@@ -133,7 +124,7 @@ func prepareForm(data *VCardFormData) *huh.Form {
 				Title("Are you ready?").
 				Affirmative("Yes, print the result!").
 				Negative("No, I´m not ready.").
-				Value(&data.Ready),
+				Value(&formData.Ready),
 		),
 	).WithTheme(huh.ThemeBase16())
 	return vCardForm
@@ -202,7 +193,7 @@ func decodeVcard(reader io.Reader) (vcard.Card, error) {
 	return card, nil
 }
 
-func ensureNullSafety(card *vcard.Card) {
+func ensureNilSafety(card *vcard.Card) {
 	if card.Name() == nil {
 		name := vcard.Name{}
 		card.SetName(&name)
@@ -213,27 +204,56 @@ func ensureNullSafety(card *vcard.Card) {
 	}
 }
 
-func cardInstance(settings *settings.Settings) (*vcard.Card, error) {
+func openVcard(settings *settings.Settings) (*os.File, error) {
+	file, err := os.Open(*settings.InputFilePath)
+	if err != nil {
+		if filepath.Ext(*settings.InputFilePath) == "" {
+			//try .vcf
+			alternateFilePath := *settings.InputFilePath + ".vcf"
+			file, err = os.Open(alternateFilePath)
+			if err != nil {
+				errors.Wrap(err, "Error when trying to open file "+cli.SprintValue(alternateFilePath))
+			} else {
+				//when the .vcf was possible to read, this will be the new InputFilePath
+				*settings.InputFilePath = alternateFilePath
+			}
+		} else {
+			errors.Wrap(err, "Error when trying to open file "+cli.SprintValue(*settings.InputFilePath))
+		}
 
-	if *settings.InputFilePath == "" {
-		card := make(vcard.Card)
-		card.SetValue(vcard.FieldVersion, *settings.VCardVersion)
-		ensureNullSafety(&card)
-		return &card, nil
-	} else {
-		// use the input file as vcard content
-		cli.Println("Reading vCard file", cli.SprintValue(*settings.InputFilePath))
-		cli.Println()
-		file, err := os.Open(*settings.InputFilePath)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	return file, err
+
+}
+
+func cardInstance(settings *settings.Settings) (*vcard.Card, error) {
+
+	if *settings.InputFilePath == "" {
+		//no path to a vcard file, create a new card
+		card := make(vcard.Card)
+		card.SetValue(vcard.FieldVersion, *settings.VCardVersion)
+		ensureNilSafety(&card)
+		return &card, nil
+	} else {
+		// we have a path to a vcard file, try to read it
+		file, err := openVcard(settings)
+		if err != nil {
+			return nil, err
+		}
+
 		defer file.Close()
+
+		fmt.Println("Reading vCard file", cli.SprintValue(*settings.InputFilePath))
+		cli.Println()
 
 		if card, err := decodeVcard(file); err != nil {
 			return nil, err
 		} else {
-			ensureNullSafety(&card)
+			ensureNilSafety(&card)
 			return &card, nil
 		}
 	}
@@ -261,7 +281,8 @@ func PrepareVcard(settings *settings.Settings) (string, error) {
 			break
 		}
 	}
-	prepareVCardData(card, formData)
+
+	transferFormData(card, formData)
 
 	return encodeVcard(card)
 

@@ -3,6 +3,7 @@ package sbom
 import (
 	"embed"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -16,6 +17,8 @@ var generated embed.FS
 
 const sbomPath = "generated/sbom.json"
 const licensesPath = "generated/licenses"
+
+var licenseRegex = regexp.MustCompile(`(?i)^(license|licence|copying|notice|readme)(\.[^.]+)?$`)
 
 func LoadEmbeddedSBOM() (*cdx.BOM, error) {
 
@@ -67,8 +70,7 @@ func loadEmbeddedLicenses(dir string, licenses *map[string]string) error {
 		name := entry.Name()
 		if !entry.IsDir() {
 			//the entry is a file
-			if strings.HasPrefix(strings.ToLower(name), "license") ||
-				strings.HasPrefix(strings.ToLower(name), "licence") {
+			if licenseRegex.MatchString(name) {
 				filePath := path.Join(licensesPath, dir, name)
 				data, err := generated.ReadFile(filePath)
 				if err != nil {

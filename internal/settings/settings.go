@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"qrvc/internal/cli"
-	"qrvc/internal/version"
 	"strings"
+
+	"github.com/ulfschneider/qrvc/internal/cli"
+	"github.com/ulfschneider/qrvc/internal/version"
 
 	"github.com/spf13/pflag"
 
@@ -29,11 +30,11 @@ func PrepareSettings() (*Settings, error) {
 
 	settings := Settings{}
 
-	settings.InputFilePath = pflag.StringP("input", "i", "", "The path and name of the vCard input file. ")
+	settings.InputFilePath = pflag.StringP("input", "i", "", "The path and name of the vCard input file. When you provide a file name without extension, .vcf will automatically added as an extension.")
 
 	settings.VCardVersion = pflag.StringP("version", "v", "3.0", "The vCard version to create.")
 
-	outputFilePath := pflag.StringP("output", "o", "", "The path and name for the output. Please do not add any file extension, as those will be added automatically.\nWill receive the extension .png for the QR code and .vcf for the vCard. The input files basename will be used by default.")
+	outputFilePath := pflag.StringP("output", "o", "", "The path and name for the output. Please do not add any file extension, as those will be added automatically.\nWill receive the extension .png for the QR code and .vcf for the vCard. The input file basename will be used by default.")
 
 	foregroundColor := pflag.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value or a CSS color name.")
 

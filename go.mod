@@ -1,4 +1,4 @@
-module qrvc
+module github.com/ulfschneider/qrvc
 
 go 1.25.3
 
