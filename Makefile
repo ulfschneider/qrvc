@@ -82,7 +82,7 @@ release:
 	fi
 
 	@if [ -z "$(VERSION)" ]; then \
-		echo "ERROR: You must pass VERSION=vx.y.z to make a release"; exit 1; \
+		echo "ERROR: You must pass VERSION=v<MAJOR>.<MINOR>.<FIX> to make a release. Do not forget the v prefix for your release!"; exit 1; \
 	fi
 
 	@echo "Creating temporary release branch $(RELEASE_BRANCH)"
