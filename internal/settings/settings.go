@@ -22,6 +22,7 @@ type Settings struct {
 	Border               *bool
 	Size                 *int
 	Silent               *bool
+	Bom                  *bool
 	BackgroundColor      *csscolorparser.Color
 	ForegroundColor      *csscolorparser.Color
 }
@@ -45,6 +46,8 @@ func PrepareSettings() (*Settings, error) {
 	settings.Size = pflag.IntP("size", "z", 400, "The size of the resulting QR code in width and height of pixels.")
 
 	settings.Silent = pflag.BoolP("silent", "s", false, "The silent mode will not interactively ask for input and instead requires an input file.")
+
+	settings.Bom = pflag.BoolP("bom", "m", false, "List the Software Bill of Materials of this tool in CycloneDX format.")
 
 	pflag.CommandLine.SortFlags = false
 

@@ -6,13 +6,14 @@ import (
 
 	"github.com/ulfschneider/qrvc/internal/cli"
 	"github.com/ulfschneider/qrvc/internal/out"
+	"github.com/ulfschneider/qrvc/internal/sbom"
 	"github.com/ulfschneider/qrvc/internal/settings"
 	"github.com/ulfschneider/qrvc/internal/vcard"
 
 	"github.com/charmbracelet/huh"
 )
 
-func run(settings *settings.Settings) error {
+func runVCard(settings *settings.Settings) error {
 	vcardContent, err := vcard.PrepareVcard(settings)
 
 	if err != nil {
@@ -22,7 +23,20 @@ func run(settings *settings.Settings) error {
 	return out.StoreResults(vcardContent, settings)
 }
 
-func finalize(err error) {
+func runSbom() error {
+	bom, err := sbom.LoadEmbeddedSBOM()
+	if err != nil {
+		return err
+	}
+	formattedBom, err := sbom.Sprintf(bom)
+	if err != nil {
+		return err
+	}
+	fmt.Println(formattedBom)
+	return nil
+}
+
+func finalize(args *settings.Settings, err error) {
 	if errors.Is(err, huh.ErrUserAborted) {
 		// User pressed Ctrl-C
 		fmt.Println("You stopped with CTRL-C")
@@ -30,8 +44,10 @@ func finalize(err error) {
 	} else if err != nil {
 		fmt.Println(errors.Unwrap(err))
 	}
+	if args != nil && !*args.Bom {
+		fmt.Println("👋")
+	}
 
-	fmt.Println("👋")
 }
 
 func main() {
@@ -40,19 +56,23 @@ func main() {
 	var args *settings.Settings
 
 	defer func() {
-		finalize(err)
+		finalize(args, err)
 	}()
 
 	if args, err = settings.PrepareSettings(); err != nil {
 		return
 	}
 
-	fmt.Println("You are running qrvc, a tool to prepare a QR code from a vCard.")
-	fmt.Println("Get a list of options by starting the program in the form:", cli.SprintValue("qrvc -h"))
-	fmt.Println("Stop the program by pressing", cli.SprintValue("CTRL-C"))
-	fmt.Println()
+	if !*args.Bom {
+		fmt.Println("You are running qrvc, a tool to prepare a QR code from a vCard.")
+		fmt.Println("Get a list of options by starting the program in the form:", cli.SprintValue("qrvc -h"))
+		fmt.Println("Stop the program by pressing", cli.SprintValue("CTRL-C"))
+		fmt.Println()
 
-	err = run(args)
+		err = runVCard(args)
+	} else {
+		err = runSbom()
+	}
 }
 
 // TODO test
