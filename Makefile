@@ -51,9 +51,9 @@ build:
 
 	@ echo "👋 Binaries are built"
 
-## sbom: check and prepare licenses and sbom for embedding them into the build
-.PHONY: sbom
-sbom:
+## bom: check and prepare licenses and sbom for embedding them into the build
+.PHONY: bom
+bom:
 	@echo "Preparing licenses"
 	rm -rf $(LICENSES);
 	go-licenses check ./... --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0 --ignore qrvc,golang.org
@@ -111,6 +111,8 @@ release:
 	git checkout -b $(RELEASE_BRANCH)
 
 	@printf "%s" "$(VERSION)" > $(VER)
+
+	@ $(MAKE) bom
 
 	@echo "Adding generated content to release branch"
 	git add -f $(GENERATED)
