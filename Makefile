@@ -49,7 +49,7 @@ build:
       cp "$(DIST)/darwin/arm64/qrvc" ~/go/bin/; \
    fi
 
-	@ echo "Ready 👋"
+	@ echo "👋 Binaries are built"
 
 ## sbom: check and prepare licenses and sbom for embedding them into the build
 .PHONY: sbom
@@ -126,4 +126,4 @@ release:
 	git checkout -
 	git branch -D $(RELEASE_BRANCH)
 
-	@echo "Release $(VERSION) complete."
+	@echo " 👋 Release $(VERSION) complete."
