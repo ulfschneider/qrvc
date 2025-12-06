@@ -53,6 +53,43 @@ build:
 
 	@ echo "👋 Binaries are built"
 
+## release: tag the current state as a release in Git
+.PHONY: release
+release:
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "ERROR: Working tree is not clean. Commit or stash changes first."; \
+		git status --porcelain; \
+		exit 1; \
+	fi
+
+	@if [ -z "$(VERSION)" ]; then \
+		echo "ERROR: You must pass VERSION=v<MAJOR>.<MINOR>.<FIX> to make a release. Do not forget the v prefix for your release!"; exit 1; \
+	fi
+
+	@echo "Creating temporary release branch $(RELEASE_BRANCH)"
+	git checkout -b $(RELEASE_BRANCH)
+
+	@printf "%s" "$(VERSION)" > $(VERSION_FILE)
+
+	@ $(MAKE) sbom
+
+	@echo "Adding generated content to release branch"
+	git add -f $(GENERATED_FOLDER)
+	git commit -m "Add SBOM and version for release $(VERSION)"
+
+	@echo "Creating or updating tag $(VERSION)"
+	git tag -f $(VERSION)
+
+	@echo "Pushing release tag"
+	git push -f origin $(VERSION)
+
+	@echo "Cleaning up temporary branch"
+	git checkout -
+	git branch -D $(RELEASE_BRANCH)
+
+	@echo "👋 Release $(VERSION) complete."
+
+
 ## sbom: check and prepare licenses and sbom for embedding them into the build
 .PHONY: sbom
 sbom:
@@ -95,39 +132,3 @@ check-verbose:
 	go mod tidy
 	go mod verify
 	govulncheck -show verbose ./...
-
-## release: tag the current state as a release in Git
-.PHONY: release
-release:
-	@if [ -n "$$(git status --porcelain)" ]; then \
-		echo "ERROR: Working tree is not clean. Commit or stash changes first."; \
-		git status --porcelain; \
-		exit 1; \
-	fi
-
-	@if [ -z "$(VERSION)" ]; then \
-		echo "ERROR: You must pass VERSION=v<MAJOR>.<MINOR>.<FIX> to make a release. Do not forget the v prefix for your release!"; exit 1; \
-	fi
-
-	@echo "Creating temporary release branch $(RELEASE_BRANCH)"
-	git checkout -b $(RELEASE_BRANCH)
-
-	@printf "%s" "$(VERSION)" > $(VERSION_FILE)
-
-	@ $(MAKE) sbom
-
-	@echo "Adding generated content to release branch"
-	git add -f $(GENERATED_FOLDER)
-	git commit -m "Add SBOM and version for release $(VERSION)"
-
-	@echo "Creating or updating tag $(VERSION)"
-	git tag -f $(VERSION)
-
-	@echo "Pushing release tag"
-	git push -f origin $(VERSION)
-
-	@echo "Cleaning up temporary branch"
-	git checkout -
-	git branch -D $(RELEASE_BRANCH)
-
-	@echo "👋 Release $(VERSION) complete."
