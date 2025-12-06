@@ -12,12 +12,12 @@ import (
 	purl "github.com/package-url/packageurl-go"
 )
 
-//go:embed generated/*
-var generated embed.FS
-
 var Version, _ = loadEmbeddedVersion()
 var bom, _ = loadEmbeddedSBOM()
 var BOM, _ = sprintf(bom)
+
+//go:embed generated/*
+var generated embed.FS
 
 //version
 
