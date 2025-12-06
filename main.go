@@ -6,9 +6,9 @@ import (
 
 	"github.com/ulfschneider/qrvc/internal/cli"
 	"github.com/ulfschneider/qrvc/internal/out"
-	"github.com/ulfschneider/qrvc/internal/sbom"
 	"github.com/ulfschneider/qrvc/internal/settings"
 	"github.com/ulfschneider/qrvc/internal/vcard"
+	"github.com/ulfschneider/qrvc/internal/version"
 
 	"github.com/charmbracelet/huh"
 )
@@ -24,15 +24,7 @@ func runVCard(settings *settings.Settings) error {
 }
 
 func runSbom() error {
-	bom, err := sbom.LoadEmbeddedSBOM()
-	if err != nil {
-		return err
-	}
-	formattedBom, err := sbom.Sprintf(bom)
-	if err != nil {
-		return err
-	}
-	fmt.Println(formattedBom)
+	fmt.Println(version.BOM)
 	return nil
 }
 
