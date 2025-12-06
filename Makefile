@@ -2,12 +2,14 @@ TOOLS :=	github.com/google/go-licenses golang.org/x/vuln/cmd/govulncheck github.
 
 PLATFORMS := windows linux darwin
 ARCHS := amd64 arm64
-BINARY := qrvc
-DIST := dist
-GENERATED := internal/version/generated/
-LICENSES := $(GENERATED)licenses
-SBOM  := $(GENERATED)sbom.json
-VER := $(GENERATED)version.txt
+
+BINARY_NAME := qrvc
+DIST_FOLDER := dist
+GENERATED_FOLDER := internal/version/generated
+LICENSES_FOLDER:= $(GENERATED_FOLDER)/licenses
+SBOM_FILE  := $(GENERATED_FOLDER)/sbom.json
+VERSION_FILE := $(GENERATED_FOLDER)/version.txt
+
 RELEASE_BRANCH := release-tmp-$(VERSION)
 
 ## help: show a list of available make commands
@@ -30,11 +32,11 @@ build:
 	@ for platform in $(PLATFORMS); do \
 	    for arch in $(ARCHS); do \
 			if [ "$$platform" = "windows" ]; then \
-           target=$(DIST)/$$platform/$$arch/$(BINARY).exe; \
+           target=$(DIST_FOLDER)/$$platform/$$arch/$(BINARY_NAME).exe; \
          else \
-           target=$(DIST)/$$platform/$$arch/$(BINARY); \
+           target=$(DIST_FOLDER)/$$platform/$$arch/$(BINARY_NAME); \
          fi; \
-			mkdir -p $(DIST)/$$platform/$$arch; \
+			mkdir -p $(DIST_FOLDER)/$$platform/$$arch; \
 			echo; \
 			echo "Building $$target"; \
 			GOOS=$$platform GOARCH=$$arch go build -o $$target . ; \
@@ -45,21 +47,21 @@ build:
 	@ . ./.env; \
 	if [ -n "$$AT_HOME" ]; then \
 	   echo;\
-      echo "I´m at home, therefore copying $(DIST)/darwin/arm64/qrvc to ~/go/bin/"; \
-      cp "$(DIST)/darwin/arm64/qrvc" ~/go/bin/; \
+      echo "I´m at home, therefore copying $(DIST_FOLDER)/darwin/arm64/qrvc to ~/go/bin/"; \
+      cp "$(DIST_FOLDER)/darwin/arm64/qrvc" ~/go/bin/; \
    fi
 
 	@ echo "👋 Binaries are built"
 
-## bom: check and prepare licenses and sbom for embedding them into the build
-.PHONY: bom
-bom:
+## sbom: check and prepare licenses and sbom for embedding them into the build
+.PHONY: sbom
+sbom:
 	@echo "Preparing licenses"
-	rm -rf $(LICENSES);
+	rm -rf $(LICENSES_FOLDER);
 	go-licenses check ./... --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0 --ignore qrvc,golang.org
-	go-licenses save ./... --save_path=$(LICENSES) --ignore qrvc,golang.org
+	go-licenses save ./... --save_path=$(LICENSES_FOLDER) --ignore qrvc,golang.org
 	@echo "Preparing SBOM"
-	@cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM)
+	@cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM_FILE)
 
 
 ## update: update all dependencies perform a check and prepare the sbom
@@ -110,12 +112,12 @@ release:
 	@echo "Creating temporary release branch $(RELEASE_BRANCH)"
 	git checkout -b $(RELEASE_BRANCH)
 
-	@printf "%s" "$(VERSION)" > $(VER)
+	@printf "%s" "$(VERSION)" > $(VERSION_FILE)
 
-	@ $(MAKE) bom
+	@ $(MAKE) sbom
 
 	@echo "Adding generated content to release branch"
-	git add -f $(GENERATED)
+	git add -f $(GENERATED_FOLDER)
 	git commit -m "Add SBOM and version for release $(VERSION)"
 
 	@echo "Creating or updating tag $(VERSION)"
@@ -128,4 +130,4 @@ release:
 	git checkout -
 	git branch -D $(RELEASE_BRANCH)
 
-	@echo " 👋 Release $(VERSION) complete."
+	@echo "👋 Release $(VERSION) complete."
