@@ -211,23 +211,17 @@ func openVcard(settings *settings.Settings) (*os.File, error) {
 			//try .vcf
 			alternateFilePath := *settings.InputFilePath + ".vcf"
 			file, err = os.Open(alternateFilePath)
-			if err != nil {
-				errors.Wrap(err, "Error when trying to open file "+cli.SprintValue(alternateFilePath))
-			} else {
+			if err == nil {
 				//when the .vcf was possible to read, this will be the new InputFilePath
 				*settings.InputFilePath = alternateFilePath
 			}
-		} else {
-			errors.Wrap(err, "Error when trying to open file "+cli.SprintValue(*settings.InputFilePath))
-		}
-
-		if err != nil {
-			return nil, err
 		}
 	}
 
+	if err != nil {
+		return nil, errors.Wrap(err, "Error when trying to open file "+cli.SprintValue(*settings.InputFilePath))
+	}
 	return file, err
-
 }
 
 func cardInstance(settings *settings.Settings) (*vcard.Card, error) {
