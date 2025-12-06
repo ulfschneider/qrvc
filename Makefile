@@ -6,7 +6,7 @@ GENERATED := internal/version/generated/
 LICENSES := $(GENERATED)licenses
 SBOM  := $(GENERATED)sbom.json
 VER := $(GENERATED)version.txt
-RELEASE_BRANCH := release-tmp-$(TAG)
+RELEASE_BRANCH := release-tmp-$(VERSION)
 
 ## help: show a list of available make commands
 .PHONY: help
