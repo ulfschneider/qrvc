@@ -1,3 +1,5 @@
+TOOLS :=	github.com/google/go-licenses golang.org/x/vuln/cmd/govulncheck github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod
+
 PLATFORMS := windows linux darwin
 ARCHS := amd64 arm64
 BINARY := qrvc
@@ -18,6 +20,8 @@ help:
 .PHONY: build
 build:
 	@echo "Building qrvc"
+
+	@ $(MAKE) update-tools
 
 	@ $(MAKE) update
 
@@ -61,16 +65,34 @@ sbom:
 ## update: update all dependencies perform a check and prepare the sbom
 .PHONY: update
 update:
+	@echo "Updating dependencies"
 	go get -u ./...
 	@ $(MAKE) check
 	@ $(MAKE) sbom
 
+## update-tools: update the tools that are required for building
+.PHONY: update-tools
+update-tools:
+	@echo "Updating build tools"
+	@for t in $(TOOLS); do \
+		echo "Updating $$t..."; \
+		go install "$$t@latest"; \
+	done
+
 ## check: tidy up the go.mod file and check for vulnerabilities
 .PHONY: check
 check:
+	@echo "Tidying up the mod file and doing a vulnerability check"
 	go mod tidy
 	go mod verify
 	govulncheck ./...
+
+## check-verbose: this is like check but with verbose logging
+check-verbose:
+	@echo "Tidying up the mod file and doing a vulnerability check with verbose logging"
+	go mod tidy
+	go mod verify
+	govulncheck -show verbose ./...
 
 ## release: tag the current state as a release in Git
 .PHONY: release
