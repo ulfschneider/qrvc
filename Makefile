@@ -91,8 +91,8 @@ release:
 	@printf "%s" "$(VERSION)" > $(VER)
 
 	@echo "Adding generated content to release branch"
-	git add $(GENERATED)
-	git commit -m "Add SBOM for release $(VERSION)"
+	git add -f $(GENERATED)
+	git commit -m "Add SBOM and version for release $(VERSION)"
 
 	@echo "Creating or updating tag $(VERSION)"
 	git tag -f $(VERSION)
