@@ -68,32 +68,35 @@ release:
 	fi
 
 	@if [ -z "$(VERSION)" ]; then \
-		echo "ERROR: You must pass VERSION=v<MAJOR>.<MINOR>.<FIX> to make a release. Do not forget the v prefix for your release!"; exit 1; \
+		echo "ERROR: You must pass VERSION=x.y.z to make a release."; exit 1; \
 	fi
+
+	# Strip leading v, then prepend exactly one v
+	NORMALIZED_VERSION := v$(patsubst v%,%,$(VERSION))
 
 	@echo "Creating temporary release branch $(RELEASE_BRANCH)"
 	git checkout -b $(RELEASE_BRANCH)
 
-	@printf "%s" "$(VERSION)" > $(VERSION_FILE)
+	@printf "%s" "$(NORMALIZED_VERSION)" > $(VERSION_FILE)
 
 	@echo ""
 	@ $(MAKE) sbom
 
 	@echo "Adding generated content to release branch"
 	git add -f $(GENERATED_FOLDER)
-	git commit -m "Add SBOM and version for release $(VERSION)"
+	git commit -m "Add SBOM and version for release $(NORMALIZED_VERSION)"
 
-	@echo "Creating or updating tag $(VERSION)"
-	git tag -f $(VERSION)
+	@echo "Creating or updating tag $(NORMALIZED_VERSION)"
+	git tag -f $(NORMALIZED_VERSION)
 
 	@echo "Pushing release tag"
-	git push -f origin $(VERSION)
+	git push -f origin $(NORMALIZED_VERSION)
 
 	@echo "Cleaning up temporary branch"
 	git checkout -
 	git branch -D $(RELEASE_BRANCH)
 
-	@echo "👋 Release $(VERSION) complete."
+	@echo "👋 Release $(NORMALIZED_VERSION) complete."
 
 
 ## sbom: check and prepare licenses and sbom for embedding them into the build
