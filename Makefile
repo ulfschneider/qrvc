@@ -26,8 +26,10 @@ help:
 build:
 	@echo "Building qrvc"
 
+	@echo ""
 	@ $(MAKE) update-tools
 
+	@echo ""
 	@ $(MAKE) update
 
 	@rm -rf $(DIST)
@@ -74,6 +76,7 @@ release:
 
 	@printf "%s" "$(VERSION)" > $(VERSION_FILE)
 
+	@echo ""
 	@ $(MAKE) sbom
 
 	@echo "Adding generated content to release branch"
@@ -100,6 +103,7 @@ sbom:
 	rm -rf $(LICENSES_FOLDER);
 	go-licenses check ./... --allowed_licenses=$(ALLOWED_LICENSES) --ignore=$(IGNORE_LICENSES)
 	go-licenses save ./... --save_path=$(LICENSES_FOLDER) --ignore=$(IGNORE_LICENSES)
+	@echo ""
 	@echo "Preparing SBOM"
 	@cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM_FILE)
 
@@ -109,7 +113,9 @@ sbom:
 update:
 	@echo "Updating dependencies"
 	go get -u ./...
+	@echo ""
 	@ $(MAKE) check
+	@echo ""
 	@ $(MAKE) sbom
 
 ## update-tools: update the tools that are required for building
