@@ -1,11 +1,14 @@
 TOOLS :=	github.com/google/go-licenses golang.org/x/vuln/cmd/govulncheck github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod
 
+ALLOWED_LICENSES := MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0
+IGNORE_LICENSES := qrvc,golang.org
+
 PLATFORMS := windows linux darwin
 ARCHS := amd64 arm64
 
 BINARY_NAME := qrvc
 DIST_FOLDER := dist
-GENERATED_FOLDER := internal/version/generated
+GENERATED_FOLDER := internal/appmeta/generated
 LICENSES_FOLDER:= $(GENERATED_FOLDER)/licenses
 SBOM_FILE  := $(GENERATED_FOLDER)/sbom.json
 VERSION_FILE := $(GENERATED_FOLDER)/version.txt
@@ -95,8 +98,8 @@ release:
 sbom:
 	@echo "Preparing licenses"
 	rm -rf $(LICENSES_FOLDER);
-	go-licenses check ./... --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0 --ignore qrvc,golang.org
-	go-licenses save ./... --save_path=$(LICENSES_FOLDER) --ignore qrvc,golang.org
+	go-licenses check ./... --allowed_licenses=$(ALLOWED_LICENSES) --ignore=$(IGNORE_LICENSES)
+	go-licenses save ./... --save_path=$(LICENSES_FOLDER) --ignore=$(IGNORE_LICENSES)
 	@echo "Preparing SBOM"
 	@cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM_FILE)
 

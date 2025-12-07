@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ulfschneider/qrvc/internal/appmeta"
 	"github.com/ulfschneider/qrvc/internal/cli"
-	"github.com/ulfschneider/qrvc/internal/version"
 
 	"github.com/spf13/pflag"
 
@@ -52,7 +52,7 @@ func PrepareSettings() (*Settings, error) {
 	pflag.CommandLine.SortFlags = false
 
 	pflag.Usage = func() {
-		fmt.Printf("qrvc %s\n", version.Version)
+		fmt.Printf("qrvc %s\n", appmeta.Version)
 		fmt.Println("qrvc is a tool to prepare a QR code from a vCard")
 		fmt.Println("\nUsage: qrvc [flags]")
 

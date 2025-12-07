@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ulfschneider/qrvc/internal/appmeta"
 	"github.com/ulfschneider/qrvc/internal/cli"
 	"github.com/ulfschneider/qrvc/internal/out"
 	"github.com/ulfschneider/qrvc/internal/settings"
 	"github.com/ulfschneider/qrvc/internal/vcard"
-	"github.com/ulfschneider/qrvc/internal/version"
 
 	"github.com/charmbracelet/huh"
 )
@@ -24,7 +24,11 @@ func runVCard(settings *settings.Settings) error {
 }
 
 func runSbom() error {
-	fmt.Println(version.BOM)
+	if s, err := appmeta.MarshalBOM(appmeta.BOM); err != nil {
+		return err
+	} else {
+		fmt.Println(string(s))
+	}
 	return nil
 }
 

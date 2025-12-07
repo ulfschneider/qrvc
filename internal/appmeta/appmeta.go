@@ -1,10 +1,10 @@
-package version
+package appmeta
 
 import (
+	"bytes"
 	"embed"
 	"path"
 	"regexp"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -13,8 +13,7 @@ import (
 )
 
 var Version, _ = loadEmbeddedVersion()
-var bom, _ = loadEmbeddedSBOM()
-var BOM, _ = sprintf(bom)
+var BOM, _ = loadEmbeddedSBOM()
 
 //go:embed generated/*
 var generated embed.FS
@@ -72,19 +71,19 @@ func loadEmbeddedSBOM() (*cdx.BOM, error) {
 	return &bom, nil
 }
 
-func sprintf(bom *cdx.BOM) (string, error) {
+func MarshalBOM(bom *cdx.BOM) ([]byte, error) {
+	var buffer bytes.Buffer
 
 	if bom == nil {
-		return "", errors.New("Given bom is nil")
+		return buffer.Bytes(), errors.New("Given bom is nil")
 	}
 
-	var sb strings.Builder
-	enc := cdx.NewBOMEncoder(&sb, cdx.BOMFileFormatJSON)
+	enc := cdx.NewBOMEncoder(&buffer, cdx.BOMFileFormatJSON)
 	enc.SetPretty(true) // pretty-print with indentation
 	if err := enc.Encode(bom); err != nil {
-		return "", err
+		return buffer.Bytes(), err
 	} else {
-		return sb.String(), nil
+		return buffer.Bytes(), nil
 	}
 }
 
