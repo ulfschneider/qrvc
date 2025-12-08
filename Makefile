@@ -13,7 +13,9 @@ LICENSES_FOLDER:= $(GENERATED_FOLDER)/licenses
 SBOM_FILE  := $(GENERATED_FOLDER)/sbom.json
 VERSION_FILE := $(GENERATED_FOLDER)/version.txt
 
-RELEASE_BRANCH := release-tmp-$(VERSION)
+# Strip leading v, then prepend exactly one v
+NORMALIZED_VERSION := v$(patsubst v%,%,$(VERSION))
+RELEASE_BRANCH := release-tmp-$(NORMALIZED_VERSION)
 
 ## help: show a list of available make commands
 .PHONY: help
@@ -70,9 +72,6 @@ release:
 	@if [ -z "$(VERSION)" ]; then \
 		echo "ERROR: You must pass VERSION=x.y.z to make a release."; exit 1; \
 	fi
-
-	# Strip leading v, then prepend exactly one v
-	NORMALIZED_VERSION := v$(patsubst v%,%,$(VERSION))
 
 	@echo "Creating temporary release branch $(RELEASE_BRANCH)"
 	git checkout -b $(RELEASE_BRANCH)
