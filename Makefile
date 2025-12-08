@@ -110,7 +110,7 @@ sbom:
 	@cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM_FILE)
 
 
-## update: update all dependencies perform a check and prepare the sbom
+## update: update all dependencies, perform a vulnerability check, make a license check and prepare the sbom
 .PHONY: update
 update:
 	@echo "Updating dependencies"
@@ -138,6 +138,7 @@ check:
 	govulncheck ./...
 
 ## check-verbose: this is like check but with verbose logging
+.PHONY: check-verbose
 check-verbose:
 	@echo "Tidying up the mod file and doing a vulnerability check with verbose logging"
 	go mod tidy
