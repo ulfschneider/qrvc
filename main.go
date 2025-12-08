@@ -24,10 +24,16 @@ func runVCard(settings *settings.Settings) error {
 }
 
 func runSbom() error {
-	if s, err := appmeta.MarshalBOM(appmeta.BOM); err != nil {
+	bom, err := appmeta.LoadEmbeddedBOM()
+	if err != nil {
+		return err
+	}
+
+	json, err := appmeta.MarshalBOMToJSON(bom)
+	if err != nil {
 		return err
 	} else {
-		fmt.Println(string(s))
+		fmt.Println(string(json))
 	}
 	return nil
 }

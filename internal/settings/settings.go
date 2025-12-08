@@ -52,7 +52,9 @@ func PrepareSettings() (*Settings, error) {
 	pflag.CommandLine.SortFlags = false
 
 	pflag.Usage = func() {
-		fmt.Printf("qrvc %s\n", appmeta.Version)
+		version, _ := appmeta.LoadEmbeddedVersion()
+
+		fmt.Printf("qrvc %s\n", version)
 		fmt.Println("qrvc is a tool to prepare a QR code from a vCard")
 		fmt.Println("\nUsage: qrvc [flags]")
 

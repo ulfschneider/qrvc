@@ -12,17 +12,13 @@ import (
 	purl "github.com/package-url/packageurl-go"
 )
 
-var Version, _ = loadEmbeddedVersion()
-var BOM, _ = loadEmbeddedSBOM()
-
 //go:embed generated/*
 var generated embed.FS
 
-//version
-
+// version
 const versionPath = "generated/version.txt"
 
-func loadEmbeddedVersion() (string, error) {
+func LoadEmbeddedVersion() (string, error) {
 	f, err := generated.Open(versionPath)
 	if err != nil {
 		return "", errors.Wrap(err, "Could not open generated version file")
@@ -36,14 +32,13 @@ func loadEmbeddedVersion() (string, error) {
 	return string(version), nil
 }
 
-//sbom
-
+// sbom
 const sbomPath = "generated/sbom.json"
 const licensesPath = "generated/licenses"
 
 var licenseRegex = regexp.MustCompile(`(?i)^(license|licence|copying|notice|readme)(\.[^.]+)?$`)
 
-func loadEmbeddedSBOM() (*cdx.BOM, error) {
+func LoadEmbeddedBOM() (*cdx.BOM, error) {
 
 	f, err := generated.Open(sbomPath)
 	if err != nil {
@@ -71,7 +66,7 @@ func loadEmbeddedSBOM() (*cdx.BOM, error) {
 	return &bom, nil
 }
 
-func MarshalBOM(bom *cdx.BOM) ([]byte, error) {
+func MarshalBOMToJSON(bom *cdx.BOM) ([]byte, error) {
 	var buffer bytes.Buffer
 
 	if bom == nil {
