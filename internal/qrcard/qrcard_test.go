@@ -1,6 +1,7 @@
 package qrcard
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -9,7 +10,7 @@ import (
 	"github.com/emersion/go-vcard"
 )
 
-const testVCardContent = `BEGIN:VCARD
+var testVCardContent = normalizeNewLines(`BEGIN:VCARD
 VERSION:3.0
 ADR:Post office box;Extended street address;Street address;City;;Postal code;Country
 EMAIL:Mail
@@ -22,7 +23,11 @@ TEL;TYPE=home:Private phone
 TITLE:Job title
 URL:Web address
 END:VCARD
-`
+`)
+
+func normalizeNewLines(s string) string {
+	return strings.ReplaceAll(s, "\r\n", "\n")
+}
 
 func TestMakeVCardInstanceFromNonExistingFile(t *testing.T) {
 	filesystem := afero.NewMemMapFs()
@@ -64,6 +69,12 @@ func TestMakeVCardInstanceFromExistingFile(t *testing.T) {
 	info, err := filesystem.Stat(filePath)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, info)
+
+	//test encode
+	vcardContent, err := encodeVcard(card)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, vcardContent)
+	assert.Equal(t, testVCardContent, normalizeNewLines(vcardContent))
 
 	//verify vcard content
 	assert.Equal(t, "3.0", card.Value(vcard.FieldVersion))
@@ -166,7 +177,7 @@ func TestFormHandling(t *testing.T) {
 	assert.Equal(t, "country", card.Address().Country)
 }
 
-func TestWriteResults(t *testing.T) {
+func TestPrepareVCard(t *testing.T) {
 	filesystem := afero.NewMemMapFs()
 	filePath := "vcard.vcf"
 
@@ -175,12 +186,10 @@ func TestWriteResults(t *testing.T) {
 
 	f.Write([]byte(testVCardContent))
 
-	//vcard.vcf file does exist
-	card, _ := makeVCardInstance(&filePath, "3.0", filesystem)
-
-	vcardContent, err := encodeVcard(card)
+	vcardContent, err := PrepareVCard(&filePath, "3.0", true, filesystem)
 	assert.NotEmpty(t, vcardContent)
 	assert.NoError(t, err)
+	assert.Equal(t, testVCardContent, normalizeNewLines(vcardContent))
 
 	// TODO test the write results
 }
