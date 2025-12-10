@@ -9,14 +9,17 @@ import (
 )
 
 func TestDefaultSettings(t *testing.T) {
+
 	args, err := settings.PrepareSettings()
 	assert.NoError(t, err)
 	assert.NotEmpty(t, args)
 
 	bgColor, err := csscolorparser.Parse("transparent")
+	assert.NoError(t, err)
 	assert.Equal(t, bgColor, *args.BackgroundColor)
 
 	fgColor, err := csscolorparser.Parse("black")
+	assert.NoError(t, err)
 	assert.Equal(t, fgColor, *args.ForegroundColor)
 
 	assert.False(t, *args.Bom)
