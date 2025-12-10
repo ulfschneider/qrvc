@@ -1,5 +1,5 @@
 # Tools used during build
-TOOLS :=	github.com/google/go-licenses golang.org/x/vuln/cmd/govulncheck github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod
+TOOLS :=	github.com/google/go-licenses golang.org/x/vuln/cmd/govulncheck github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod github.com/fzipp/gocyclo/cmd/gocyclo github.com/gordonklaus/ineffassign github.com/client9/misspell/cmd/misspell
 
 # License handling
 ALLOWED_LICENSES := MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0
@@ -33,9 +33,6 @@ help:
 .PHONY: build
 build:
 	@echo "Building qrvc"
-
-	@echo
-	@ $(MAKE) update-tools
 
 	@echo
 	@ $(MAKE) update
@@ -165,9 +162,14 @@ update-tools:
 ## check: tidy up the go.mod file and check for vulnerabilities
 .PHONY: check
 check:
+	@ $(MAKE) update-tools
+	@echo
 	@echo "Tidying up the mod file and doing a vulnerability check"
 	go mod tidy
 	go mod verify
-	go fmt ./...
+	gofmt -s -w  .
 	go vet ./...
+	gocyclo ./...
+	ineffassign ./...
+	misspell -error ./...
 	govulncheck ./...
