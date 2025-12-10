@@ -1,29 +1,33 @@
+// Package main provides a command line program that allows to process vCard data from a file or from a command line form and store that data as a QR Code.
 package main
 
 import (
 	"errors"
 	"fmt"
 
+	"github.com/spf13/afero"
 	"github.com/ulfschneider/qrvc/internal/appmeta"
 	"github.com/ulfschneider/qrvc/internal/cli"
-	"github.com/ulfschneider/qrvc/internal/out"
+	"github.com/ulfschneider/qrvc/internal/qrcard"
 	"github.com/ulfschneider/qrvc/internal/settings"
-	"github.com/ulfschneider/qrvc/internal/vcard"
 
 	"github.com/charmbracelet/huh"
 )
 
-func runVCard(settings *settings.Settings) error {
-	vcardContent, err := vcard.PrepareVcard(settings)
+func runQRCard(settings *settings.Settings) error {
+	filesystem := afero.NewOsFs()
+
+	vcardContent, err := qrcard.PrepareVCard(settings.InputFilePath, *settings.VCardVersion, *settings.Silent, filesystem)
 
 	if err != nil {
 		return err
 	}
 
-	return out.StoreResults(vcardContent, settings)
+	err = qrcard.WriteResults(vcardContent, settings, filesystem)
+	return err
 }
 
-func runSbom() error {
+func runBOM() error {
 	bom, err := appmeta.LoadEmbeddedBOM()
 	if err != nil {
 		return err
@@ -71,11 +75,8 @@ func main() {
 		fmt.Println("Stop the program by pressing", cli.SprintValue("CTRL-C"))
 		fmt.Println()
 
-		err = runVCard(args)
+		err = runQRCard(args)
 	} else {
-		err = runSbom()
+		err = runBOM()
 	}
 }
-
-// TODO test
-// TODO documentation

@@ -1,3 +1,4 @@
+// Package appmeta provides meta information about the app, like the app version and the software bill of materials.
 package appmeta
 
 import (
@@ -18,6 +19,7 @@ var generated embed.FS
 // version
 const versionPath = "generated/version.txt"
 
+// LoadEmbeddedVersion will load and return the version that is embedded inside the application
 func LoadEmbeddedVersion() (string, error) {
 	f, err := generated.Open(versionPath)
 	if err != nil {
@@ -38,6 +40,8 @@ const licensesPath = "generated/licenses"
 
 var licenseRegex = regexp.MustCompile(`(?i)^(license|licence|copying|notice|readme)(\.[^.]+)?$`)
 
+// LoadEmbeddedBOM will load and return the BOM that is embedded inside the application.
+// The returned BOM will contain not only the license evidence, but also the concrete license text for each component.
 func LoadEmbeddedBOM() (*cdx.BOM, error) {
 
 	f, err := generated.Open(sbomPath)
@@ -66,6 +70,7 @@ func LoadEmbeddedBOM() (*cdx.BOM, error) {
 	return &bom, nil
 }
 
+// MarshalBOMToJson will marshal the given BOM into a JSON byte slice
 func MarshalBOMToJSON(bom *cdx.BOM) ([]byte, error) {
 	var buffer bytes.Buffer
 

@@ -1,3 +1,4 @@
+// Package cli provides helper methods to format output for the console
 package cli
 
 import (
@@ -6,20 +7,20 @@ import (
 	"github.com/fatih/color"
 )
 
+// Silent controls if logging operates in silent mode
 var Silent bool = false
 
-// Format the given value the that it will be printed with value coloring.
+// SprintValue will format the given value for the console so that it can be identified as a value.
 func SprintValue(value any) string {
 	return color.CyanString("%v", value)
 }
 
-// Format the given value so that it will be printed with alert coloring.
+// SprintAlert will format the given value for the console  so that it can be identified an alert information.
 func SprintAlert(value any) string {
 	return color.HiRedString("%v", value)
 }
 
-// Will print out the given values. Will omit printing when the Silent setting is true.
-// Even if Silent is true, when one of the given values is an error, all of the values will be printed!
+// Println will print out the given values to the console only when `Silent` is false, or when the given values contain an error.
 func Println(value ...any) {
 
 	var isError bool
