@@ -127,7 +127,7 @@ release:
 .PHONY: test
 test:
 	@echo "Automated tests"
-	go test $(shell go list ./... | grep -v appmeta)
+	@go test $(shell go list ./... | grep -v appmeta)
 
 ## test_appmeta: run the automated tests for appmeta
 .PHONY: test_appmeta
