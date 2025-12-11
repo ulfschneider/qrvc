@@ -2,18 +2,26 @@ package appmeta_test
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/ulfschneider/qrvc/internal/appmeta"
 )
 
+func ensureVPrefix(s string) string {
+	if strings.HasPrefix(s, "v") {
+		return s
+	}
+	return "v" + s
+}
+
 func TestVersion(t *testing.T) {
 	envVersion := os.Getenv("VERSION")
 	v, err := appmeta.LoadEmbeddedVersion()
 	if envVersion != "" {
 		assert.NoError(t, err)
-		assert.Equal(t, envVersion, v)
+		assert.Equal(t, ensureVPrefix(envVersion), v)
 	}
 }
 
