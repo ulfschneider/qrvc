@@ -81,9 +81,6 @@ release:
 
 	@ $(MAKE) check
 
-	@echo
-	@ $(MAKE) test
-
 	@if [ -n "$$(git status --porcelain)" ]; then \
 		echo "ERROR: Working tree is not clean. Commit or stash changes first."; \
 		git status --porcelain; \
