@@ -14,7 +14,7 @@ go install github.com/ulfschneider/qrvc@latest
 
 ## Usage
 
-After installation, start up the took with the `-h` flag to get information about how to use it.
+After installation, start the tool with the `-h` flag to get information about how to use it:
 
 ```sh
 qrvc -h
@@ -22,13 +22,13 @@ qrvc -h
 
 ## Build
 
-The project contains a Makefile which allows you to build the tool yourself. 
+The project contains a Makefile which allows you to build the tool yourself:
 
 ```sh
 make build
 ```
 
-To get a list of all available make targets, call
+To get a list of all available make targets, call:
 
 ```sh
 make
