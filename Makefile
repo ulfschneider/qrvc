@@ -101,21 +101,21 @@ release:
 
 	@echo
 	@echo "Adding generated content to release branch"
-	git add -f $(GENERATED_FOLDER)
+	git add --force $(GENERATED_FOLDER)
 	git commit -m "Add SBOM and version for release $(NORMALIZED_VERSION)"
 
 	@echo
 	@echo "Creating or updating tag $(NORMALIZED_VERSION)"
-	git tag -f $(NORMALIZED_VERSION)
+	git tag --force $(NORMALIZED_VERSION)
 
 	@echo
 	@echo "Pushing release tag"
-	git push -f origin $(NORMALIZED_VERSION)
+	git push --force origin $(NORMALIZED_VERSION)
 
 	@echo
 	@echo "Cleaning up temporary branch"
 	git checkout -
-	git branch -D $(RELEASE_BRANCH)
+	git branch --delete --force $(RELEASE_BRANCH)
 
 	@echo
 	@echo "👋 Release $(NORMALIZED_VERSION) complete."
