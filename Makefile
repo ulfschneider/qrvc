@@ -41,6 +41,9 @@ build:
 	@ $(MAKE) check
 
 	@echo
+	@ $(MAKE) sbom
+
+	@echo
 	@ $(MAKE) test
 
 	@rm -rf $(DIST)
@@ -97,7 +100,7 @@ release:
 	@ $(MAKE) sbom
 
 	@echo
-	@ $(MAKE) test_appmeta
+	@ $(MAKE) test
 
 	@echo
 	@echo "Adding generated content to release branch"
@@ -120,17 +123,11 @@ release:
 	@echo
 	@echo "👋 Release $(NORMALIZED_VERSION) complete."
 
-## test: run all the automated tests, excluding appmeta tests
-.PHONY: test
+## test: run all the automated tests
+.PHONY: Test
 test:
 	@echo "Automated tests"
-	@go test $(shell go list ./... | grep -v appmeta)
-
-## test_appmeta: run the automated tests for appmeta
-.PHONY: test_appmeta
-test_appmeta:
-	@echo "Test appmeta"
-	go test ./internal/appmeta
+	@go test ./...
 
 ## sbom: check and prepare licenses and sbom for embedding them into the build
 .PHONY: sbom
@@ -159,12 +156,12 @@ update-tools:
 		go install "$$t@latest"; \
 	done
 
-## check: tidy up the go.mod file and check for vulnerabilities
+## check: tidy up the go.mod file and check dependencies and code
 .PHONY: check
 check:
 	@ $(MAKE) update-tools
 	@echo
-	@echo "Tidying up the mod file and doing a vulnerability check"
+	@echo "Tidying up the mod file and check dependencies and code"
 	go mod tidy
 	go mod verify
 	gofmt -s -w  .
