@@ -15,21 +15,26 @@ import (
 )
 
 type Settings struct {
-	InputFilePath        *string
-	VCardVersion         *string
-	QRCodeOutputFilePath *string
-	VCardOutputFilePath  *string
-	Border               *bool
-	Size                 *int
-	Silent               *bool
-	Bom                  *bool
-	BackgroundColor      *csscolorparser.Color
-	ForegroundColor      *csscolorparser.Color
+	InputFilePath  *string
+	VCardVersion   *string
+	Silent         *bool
+	Bom            *bool
+	OutputSettings *OutputSettings
+}
+
+type OutputSettings struct {
+	QRCodeFilePath  *string
+	VCardFilePath   *string
+	Border          *bool
+	Size            *int
+	BackgroundColor *csscolorparser.Color
+	ForegroundColor *csscolorparser.Color
 }
 
 func PrepareSettings() (*Settings, error) {
 
 	settings := Settings{}
+	settings.OutputSettings = &OutputSettings{}
 
 	settings.InputFilePath = pflag.StringP("input", "i", "", "The path and name of the vCard input file. When you provide a file name without extension, .vcf will automatically added as an extension.")
 
@@ -41,9 +46,9 @@ func PrepareSettings() (*Settings, error) {
 
 	backgroundColor := pflag.StringP("background", "b", "transparent", "The background color of the QR code. This can be a hex RGB color value or a CSS color name.")
 
-	settings.Border = pflag.BoolP("border", "r", false, "Whether the QR code has a border or not.")
+	settings.OutputSettings.Border = pflag.BoolP("border", "r", false, "Whether the QR code has a border or not.")
 
-	settings.Size = pflag.IntP("size", "z", 400, "The size of the resulting QR code in width and height of pixels.")
+	settings.OutputSettings.Size = pflag.IntP("size", "z", 400, "The size of the resulting QR code in width and height of pixels.")
 
 	settings.Silent = pflag.BoolP("silent", "s", false, "The silent mode will not interactively ask for input and instead requires an input file.")
 
@@ -87,10 +92,10 @@ func PrepareSettings() (*Settings, error) {
 	if *outputFilePath == "" {
 		*outputFilePath = "vcard"
 	}
-	settings.QRCodeOutputFilePath = new(string)
-	*settings.QRCodeOutputFilePath = *outputFilePath + ".png"
-	settings.VCardOutputFilePath = new(string)
-	*settings.VCardOutputFilePath = *outputFilePath + ".vcf"
+	settings.OutputSettings.QRCodeFilePath = new(string)
+	*settings.OutputSettings.QRCodeFilePath = *outputFilePath + ".png"
+	settings.OutputSettings.VCardFilePath = new(string)
+	*settings.OutputSettings.VCardFilePath = *outputFilePath + ".vcf"
 
 	//verify silent mode
 	if *settings.Silent && *settings.InputFilePath == "" {
@@ -102,13 +107,13 @@ func PrepareSettings() (*Settings, error) {
 	if c, err := csscolorparser.Parse(*foregroundColor); err != nil {
 		return nil, err
 	} else {
-		settings.ForegroundColor = &c
+		settings.OutputSettings.ForegroundColor = &c
 	}
 
 	if c, err := csscolorparser.Parse(*backgroundColor); err != nil {
 		return nil, err
 	} else {
-		settings.BackgroundColor = &c
+		settings.OutputSettings.BackgroundColor = &c
 	}
 
 	return &settings, nil

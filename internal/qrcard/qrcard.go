@@ -2,11 +2,9 @@ package qrcard
 
 import (
 	"bytes"
-	"fmt"
 	"image/png"
 	"io"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -229,14 +227,17 @@ func openVcard(inputFilePath *string, filesystem afero.Fs) (fs.File, error) {
 	return file, err
 }
 
-func makeVCardInstance(inputFilePath *string, vcardVersion string, filesystem afero.Fs) (*vcard.Card, error) {
+func makeVCardInstance(inputFilePath *string, vcardVersion string, silent bool, filesystem afero.Fs) (*vcard.Card, error) {
 
-	if *inputFilePath == "" {
+	if *inputFilePath == "" && silent == false {
 		//no path to a vcard file, create a new card
 		card := make(vcard.Card)
 		card.SetValue(vcard.FieldVersion, vcardVersion)
 		ensureNilSafety(&card)
 		return &card, nil
+	} else if *inputFilePath == "" && silent == true {
+		//no path to a vcard file, but tool runs in silent mode
+		return nil, errors.New("Missing input file path")
 	} else {
 		// we have a path to a vcard file, try to read it
 		file, err := openVcard(inputFilePath, filesystem)
@@ -246,7 +247,7 @@ func makeVCardInstance(inputFilePath *string, vcardVersion string, filesystem af
 
 		defer file.Close()
 
-		fmt.Println("Reading vCard file", cli.SprintValue(*inputFilePath))
+		cli.Println("Reading vCard file", cli.SprintValue(*inputFilePath))
 		cli.Println()
 
 		if card, err := decodeVcard(file); err != nil {
@@ -266,7 +267,7 @@ func makeVCardInstance(inputFilePath *string, vcardVersion string, filesystem af
 // In that case the user will not be asked for further input, instead the read file content is returned as a string.
 // `filesystem` is used to access the vCard content file.
 func PrepareVCard(inputFilePath *string, vcardVersion string, silent bool, filesystem afero.Fs) (string, error) {
-	card, err := makeVCardInstance(inputFilePath, vcardVersion, filesystem)
+	card, err := makeVCardInstance(inputFilePath, vcardVersion, silent, filesystem)
 	if err != nil {
 		return "", err
 	}
@@ -296,16 +297,16 @@ func PrepareVCard(inputFilePath *string, vcardVersion string, silent bool, files
 // WriteResults stores the `vcardContent` in a vCard file and creates a QR Code that is as well stored.
 // The `filesystem` is used to create the files.
 // `settings` provide the namess for the files and style information for the QR Code.
-func WriteResults(vcardContent string, settings *settings.Settings, filesystem afero.Fs) error {
+func WriteResults(vcardContent string, settings *settings.OutputSettings, filesystem afero.Fs) error {
 
-	if file, err := filesystem.Create(*settings.VCardOutputFilePath); err != nil {
+	if file, err := filesystem.Create(*settings.VCardFilePath); err != nil {
 		return err
 	} else {
 		defer file.Close()
 		if _, err := file.WriteString(vcardContent); err != nil {
 			return err
 		} else {
-			fmt.Println("The vCard has been written to", cli.SprintValue(*settings.VCardOutputFilePath))
+			cli.Println("The vCard has been written to", cli.SprintValue(*settings.VCardFilePath))
 		}
 	}
 
@@ -317,18 +318,17 @@ func WriteResults(vcardContent string, settings *settings.Settings, filesystem a
 	q.DisableBorder = !*settings.Border
 	q.ForegroundColor = *settings.ForegroundColor
 	q.BackgroundColor = *settings.BackgroundColor
-	q.Level = qrcode.Low
 
 	img := q.Image(*settings.Size)
 
-	if file, err := os.Create(*settings.QRCodeOutputFilePath); err != nil {
+	if file, err := filesystem.Create(*settings.QRCodeFilePath); err != nil {
 		return err
 	} else {
 		defer file.Close()
 		if err := png.Encode(file, img); err != nil {
 			return err
 		} else {
-			fmt.Println("The QR code has been written to", cli.SprintValue(*settings.QRCodeOutputFilePath))
+			cli.Println("The QR code has been written to", cli.SprintValue(*settings.QRCodeFilePath))
 		}
 	}
 	return nil

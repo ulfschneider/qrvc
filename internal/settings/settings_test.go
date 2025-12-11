@@ -14,28 +14,28 @@ func TestDefaultSettings(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, args)
 
-	bgColor, err := csscolorparser.Parse("transparent")
-	assert.NoError(t, err)
-	assert.Equal(t, bgColor, *args.BackgroundColor)
+	assert.Equal(t, "", *args.InputFilePath)
 
-	fgColor, err := csscolorparser.Parse("black")
-	assert.NoError(t, err)
-	assert.Equal(t, fgColor, *args.ForegroundColor)
+	assert.Equal(t, "3.0", *args.VCardVersion)
 
 	assert.False(t, *args.Bom)
 
 	assert.False(t, *args.Silent)
 
-	assert.False(t, *args.Border)
+	bgColor, err := csscolorparser.Parse("transparent")
+	assert.NoError(t, err)
+	assert.Equal(t, bgColor, *args.OutputSettings.BackgroundColor)
 
-	assert.Equal(t, 400, *args.Size)
+	fgColor, err := csscolorparser.Parse("black")
+	assert.NoError(t, err)
+	assert.Equal(t, fgColor, *args.OutputSettings.ForegroundColor)
 
-	assert.Equal(t, "3.0", *args.VCardVersion)
+	assert.False(t, *args.OutputSettings.Border)
 
-	assert.Equal(t, "", *args.InputFilePath)
+	assert.Equal(t, 400, *args.OutputSettings.Size)
 
-	assert.Equal(t, "vcard.vcf", *args.VCardOutputFilePath)
+	assert.Equal(t, "vcard.vcf", *args.OutputSettings.VCardFilePath)
 
-	assert.Equal(t, "vcard.png", *args.QRCodeOutputFilePath)
+	assert.Equal(t, "vcard.png", *args.OutputSettings.QRCodeFilePath)
 
 }

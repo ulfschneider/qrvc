@@ -1,11 +1,16 @@
 package qrcard
 
 import (
+	"image"
+	"image/draw"
 	"strings"
 	"testing"
 
+	"github.com/mazznoer/csscolorparser"
+	"github.com/skip2/go-qrcode"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/ulfschneider/qrvc/internal/settings"
 
 	"github.com/emersion/go-vcard"
 )
@@ -33,8 +38,8 @@ func TestMakeVCardInstanceFromNonExistingFile(t *testing.T) {
 	filesystem := afero.NewMemMapFs()
 	filePath := "vcard"
 
-	//vcard file does not exist, there is nothing to read
-	vcard, err := makeVCardInstance(&filePath, "3.0", filesystem)
+	//vcard file does not exist, there is nothing to read, must return an error
+	vcard, err := makeVCardInstance(&filePath, "3.0", true, filesystem)
 	assert.Error(t, err)
 	assert.Nil(t, vcard)
 
@@ -56,12 +61,12 @@ func TestMakeVCardInstanceFromExistingFile(t *testing.T) {
 	f.Write([]byte(testVCardContent))
 
 	//vcard.vcf file does exist
-	card, err := makeVCardInstance(&filePath, "3.0", filesystem)
+	card, err := makeVCardInstance(&filePath, "3.0", true, filesystem)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, card)
 
 	//vcard (.vcf is added automatically) can as well be used to access the file
-	card, err = makeVCardInstance(&simpleFilePath, "3.0", filesystem)
+	card, err = makeVCardInstance(&simpleFilePath, "3.0", true, filesystem)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, card)
 
@@ -70,13 +75,13 @@ func TestMakeVCardInstanceFromExistingFile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, info)
 
-	//test encode
+	//encoding the vcard will return vcard content
 	vcardContent, err := encodeVcard(card)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, vcardContent)
 	assert.Equal(t, testVCardContent, normalizeNewLines(vcardContent))
 
-	//verify vcard content
+	//verify vcard fields
 	assert.Equal(t, "3.0", card.Value(vcard.FieldVersion))
 
 	assert.Equal(t, "Given name", card.Name().GivenName)
@@ -116,7 +121,7 @@ func TestFormHandling(t *testing.T) {
 	f.Write([]byte(testVCardContent))
 
 	//vcard.vcf file does exist
-	card, _ := makeVCardInstance(&filePath, "3.0", filesystem)
+	card, _ := makeVCardInstance(&filePath, "3.0", true, filesystem)
 
 	formData := transferVCardIntoFormData(card)
 	assert.Equal(t, *card.Name(), formData.name)
@@ -186,10 +191,94 @@ func TestPrepareVCard(t *testing.T) {
 
 	f.Write([]byte(testVCardContent))
 
+	//preparing a vcard based on a vcard file will return exactly that content
 	vcardContent, err := PrepareVCard(&filePath, "3.0", true, filesystem)
 	assert.NotEmpty(t, vcardContent)
 	assert.NoError(t, err)
 	assert.Equal(t, testVCardContent, normalizeNewLines(vcardContent))
+}
 
-	// TODO test the write results
+func TestWriteResults(t *testing.T) {
+	filesystem := afero.NewMemMapFs()
+	filePath := "vcard.vcf"
+
+	//create file
+	f, _ := filesystem.Create(filePath)
+
+	f.Write([]byte(testVCardContent))
+
+	//preparing a vcard based on a vcard file will return exactly that content
+	vcardContent, _ := PrepareVCard(&filePath, "3.0", true, filesystem)
+
+	qrCodePath := "vcard-result.png"
+	vcardPath := "vcard-result.vcf"
+	border := false
+	size := 300
+	background, _ := csscolorparser.Parse("black")
+	foreground, _ := csscolorparser.Parse("orange")
+
+	settings := &settings.OutputSettings{QRCodeFilePath: &qrCodePath, VCardFilePath: &vcardPath, Border: &border, Size: &size, BackgroundColor: &background, ForegroundColor: &foreground}
+	WriteResults(vcardContent, settings, filesystem)
+
+	qrFile, err := filesystem.Open(qrCodePath)
+	assert.NoError(t, err)
+	resultImg, format, err := image.Decode(qrFile)
+	assert.NoError(t, err)
+	assert.Equal(t, "png", format)
+
+	expectedImg, err := makeQRCode(vcardContent, settings)
+	assert.NoError(t, err)
+	assert.Equal(t, toRGBA(expectedImg).Pix, toRGBA(resultImg).Pix)
+
+	resultVCardContent, err := afero.ReadFile(filesystem, vcardPath)
+	assert.NoError(t, err)
+	assert.Equal(t, testVCardContent, normalizeNewLines(string(resultVCardContent)))
+
+	//change output settings
+	border = true
+	size = 200
+	background, _ = csscolorparser.Parse("orange")
+	foreground, _ = csscolorparser.Parse("black")
+	WriteResults(vcardContent, settings, filesystem)
+
+	qrFile, err = filesystem.Open(qrCodePath)
+	assert.NoError(t, err)
+	resultImg, format, err = image.Decode(qrFile)
+	assert.NoError(t, err)
+	assert.Equal(t, "png", format)
+
+	changedExpectedImg, err := makeQRCode(vcardContent, settings)
+	assert.NoError(t, err)
+	//the changedExpectedImg will be different from the previous expectedImg
+	assert.NotEqual(t, toRGBA(changedExpectedImg).Pix, toRGBA(expectedImg).Pix)
+	//but the changedExpectedImg and the resultImg must be equal
+	assert.Equal(t, toRGBA(changedExpectedImg).Pix, toRGBA(resultImg).Pix)
+
+	//the vcard content will stay the same
+	resultVCardContent, err = afero.ReadFile(filesystem, vcardPath)
+	assert.NoError(t, err)
+	assert.Equal(t, testVCardContent, normalizeNewLines(string(resultVCardContent)))
+
+}
+
+func makeQRCode(vcardContent string, settings *settings.OutputSettings) (image.Image, error) {
+	q, err := qrcode.New(vcardContent, qrcode.Low)
+	if err != nil {
+		return nil, err
+	}
+
+	q.DisableBorder = !*settings.Border
+	q.ForegroundColor = *settings.ForegroundColor
+	q.BackgroundColor = *settings.BackgroundColor
+
+	img := q.Image(*settings.Size)
+
+	return img, nil
+}
+
+func toRGBA(img image.Image) *image.RGBA {
+	b := img.Bounds()
+	rgba := image.NewRGBA(b)
+	draw.Draw(rgba, b, img, b.Min, draw.Src)
+	return rgba
 }
