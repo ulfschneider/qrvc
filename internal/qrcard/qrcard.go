@@ -296,7 +296,7 @@ func PrepareVCard(inputFilePath *string, vcardVersion string, silent bool, files
 
 // WriteResults stores the `vcardContent` in a vCard file and creates a QR Code that is as well stored.
 // The `filesystem` is used to create the files.
-// `settings` provide the namess for the files and style information for the QR Code.
+// `settings` provide the names for the files and style information for the QR Code.
 func WriteResults(vcardContent string, settings *settings.OutputSettings, filesystem afero.Fs) error {
 
 	if file, err := filesystem.Create(*settings.VCardFilePath); err != nil {
