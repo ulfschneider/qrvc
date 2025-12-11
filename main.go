@@ -23,7 +23,7 @@ func runQRCard(settings *settings.Settings) error {
 		return err
 	}
 
-	err = qrcard.WriteResults(vcardContent, settings, filesystem)
+	err = qrcard.WriteResults(vcardContent, settings.OutputSettings, filesystem)
 	return err
 }
 
@@ -45,13 +45,15 @@ func runBOM() error {
 func finalize(args *settings.Settings, err error) {
 	if errors.Is(err, huh.ErrUserAborted) {
 		// User pressed Ctrl-C
-		fmt.Println("You stopped with CTRL-C")
+		cli.Println("You stopped with CTRL-C")
 		return
 	} else if err != nil {
-		fmt.Println(errors.Unwrap(err))
+		//any other error
+		cli.Println(err)
 	}
 	if args != nil && !*args.Bom {
-		fmt.Println("👋")
+		//say good bye
+		cli.Println("👋")
 	}
 
 }
@@ -66,14 +68,15 @@ func main() {
 	}()
 
 	if args, err = settings.PrepareSettings(); err != nil {
+		//terminate the program but still run the finalize function
 		return
 	}
 
 	if !*args.Bom {
-		fmt.Println("You are running qrvc, a tool to prepare a QR code from a vCard.")
-		fmt.Println("Get a list of options by starting the program in the form:", cli.SprintValue("qrvc -h"))
-		fmt.Println("Stop the program by pressing", cli.SprintValue("CTRL-C"))
-		fmt.Println()
+		cli.Println("You are running qrvc, a tool to prepare a QR code from a vCard.")
+		cli.Println("Get a list of options by starting the program in the form:", cli.SprintValue("qrvc -h"))
+		cli.Println("Stop the program by pressing", cli.SprintValue("CTRL-C"))
+		cli.Println()
 
 		err = runQRCard(args)
 	} else {
