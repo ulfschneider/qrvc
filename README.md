@@ -1,6 +1,6 @@
 # qrvc
 
-![Version](https://img.shields.io/github/v/tag/ulfschneider/qrvc?sort=semver&label=Version)
+![Version](https://img.shields.io/github/v/tag/ulfschneider/qrvc?sort=semver&label=version)
 ![Go Reference](https://pkg.go.dev/badge/github.com/ulfschneider/qrvc.svg)
 ![Go Report Card](https://goreportcard.com/badge/github.com/ulfschneider/qrvc)
 ![License](https://img.shields.io/github/license/ulfschneider/qrvc)
