@@ -9,25 +9,29 @@ import (
 	"github.com/ulfschneider/qrvc/internal/adapters/cliconfig"
 	"github.com/ulfschneider/qrvc/internal/adapters/clieditor"
 	"github.com/ulfschneider/qrvc/internal/adapters/clinotifier"
+	"github.com/ulfschneider/qrvc/internal/adapters/qrcodec"
+	"github.com/ulfschneider/qrvc/internal/adapters/vcardcodec"
 
 	"github.com/ulfschneider/qrvc/internal/adapters/embeddedbom"
 	"github.com/ulfschneider/qrvc/internal/adapters/embeddedversion"
 	"github.com/ulfschneider/qrvc/internal/adapters/filerepo"
-	"github.com/ulfschneider/qrvc/internal/adapters/qrencoder"
+
 	"github.com/ulfschneider/qrvc/internal/application/services"
 
 	"github.com/charmbracelet/huh"
 )
 
 func runQRCard(settings cliconfig.CLIFileSettings) error {
-	qrEncoder := qrencoder.NewQRCardEncoder()
-	repo := filerepo.NewFileRepo(
+	cardCodec := vcardcodec.NewCodec()
+	qrCodec := qrcodec.NewCodec()
+	repo := filerepo.NewRepo(
 		afero.NewOsFs(),
-		&qrEncoder,
+		&cardCodec,
+		&qrCodec,
 		settings.Files,
 		settings.App)
 
-	editor := clieditor.NewCLIVCardEditor()
+	editor := clieditor.NewCardEditor()
 
 	cardService := services.NewQRCardService(settings.App, &repo, &editor)
 
@@ -46,7 +50,7 @@ func runBOM() error {
 }
 
 func finalize(settings cliconfig.CLIFileSettings, err error) {
-	userNotifier := clinotifier.NewCLINotifier()
+	userNotifier := clinotifier.NewUserNotifier()
 	if errors.Is(err, huh.ErrUserAborted) {
 		// User pressed Ctrl-C
 		userNotifier.Notify("You stopped with CTRL-C")
@@ -66,7 +70,7 @@ func loadConfig() (cliconfig.CLIFileSettings, error) {
 
 	versionProvider := embeddedversion.NewVersionProvider()
 	versionService := services.NewVersionService(&versionProvider)
-	settingsProvider := cliconfig.NewCLIFileSettingsProvider(versionService)
+	settingsProvider := cliconfig.NewSettingsProvider(versionService)
 
 	settings, err := settingsProvider.Load()
 	if err != nil {
@@ -86,7 +90,7 @@ func main() {
 	}()
 
 	if !settings.CLI.Bom {
-		userNotifier := clinotifier.NewCLINotifier()
+		userNotifier := clinotifier.NewUserNotifier()
 		userNotifier.Notify("You are running qrvc, a tool to prepare a QR code from a vCard.")
 		userNotifier.Notifyf("Get a list of options by starting the program in the form: %s", "qrvc -h")
 		userNotifier.Notifyf("Stop the program by pressing %s", "CTRL-C")

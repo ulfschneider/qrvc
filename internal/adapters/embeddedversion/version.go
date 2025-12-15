@@ -4,11 +4,11 @@ import (
 	"embed"
 )
 
-type EmbeddedVersionProvider struct {
+type VersionProvider struct {
 }
 
-func NewVersionProvider() EmbeddedVersionProvider {
-	return EmbeddedVersionProvider{}
+func NewVersionProvider() VersionProvider {
+	return VersionProvider{}
 }
 
 //go:embed generated/*
@@ -17,7 +17,7 @@ var generated embed.FS
 // version
 const versionPath = "generated/version.txt"
 
-func (vp *EmbeddedVersionProvider) Version() (string, error) {
+func (vp *VersionProvider) Version() (string, error) {
 	f, err := generated.Open(versionPath)
 	if err != nil {
 		return "", err

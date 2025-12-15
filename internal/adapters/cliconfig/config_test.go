@@ -20,7 +20,7 @@ func (vp versionProvider) Version() (string, error) {
 func TestDefaultSettings(t *testing.T) {
 
 	versionService := services.NewVersionService(versionProvider{})
-	settingsProvider := cliconfig.NewCLIFileSettingsProvider(versionService)
+	settingsProvider := cliconfig.NewSettingsProvider(versionService)
 
 	settings, err := settingsProvider.Load()
 	assert.NoError(t, err)

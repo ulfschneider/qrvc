@@ -8,14 +8,14 @@ import (
 	"github.com/emersion/go-vcard"
 )
 
-type CLIVCardEditor struct {
+type CardEditor struct {
 }
 
-func NewCLIVCardEditor() CLIVCardEditor {
-	return CLIVCardEditor{}
+func NewCardEditor() CardEditor {
+	return CardEditor{}
 }
 
-func (e *CLIVCardEditor) Edit(card *vcard.Card) error {
+func (e *CardEditor) Edit(card vcard.Card) error {
 	formData := transferVCardIntoFormData(card)
 
 	for {
@@ -54,7 +54,7 @@ func maybeGet(s []string, i int) string {
 	return ""
 }
 
-func transferVCardIntoFormData(card *vcard.Card) *qrCardFormData {
+func transferVCardIntoFormData(card vcard.Card) *qrCardFormData {
 
 	sex, _ := card.Gender()
 
@@ -80,7 +80,7 @@ func transferVCardIntoFormData(card *vcard.Card) *qrCardFormData {
 	return &data
 }
 
-func transferFormDataIntoVCard(card *vcard.Card, formData *qrCardFormData) {
+func transferFormDataIntoVCard(card vcard.Card, formData *qrCardFormData) {
 	card.SetName(&formData.name)
 	card.SetGender(vcard.Sex(formData.gender), "")
 	card.SetValue(vcard.FieldTitle, formData.title)
@@ -145,12 +145,12 @@ func prepareForm(formData *qrCardFormData) *huh.Form {
 	return vCardForm
 }
 
-func typedVcardFieldValue(card *vcard.Card, fieldName, wantType string) string {
+func typedVcardFieldValue(card vcard.Card, fieldName, wantType string) string {
 	if wantType == "" {
 		return card.Value(fieldName)
 	}
 
-	typedFields := (*card)[fieldName]
+	typedFields := card[fieldName]
 	if typedFields == nil {
 		return ""
 	}
@@ -164,7 +164,7 @@ func typedVcardFieldValue(card *vcard.Card, fieldName, wantType string) string {
 	return ""
 }
 
-func setTypedVcardFieldValue(card *vcard.Card, fieldName, wantType, value string) {
+func setTypedVcardFieldValue(card vcard.Card, fieldName, wantType, value string) {
 	// we didn´t get a type
 	if wantType == "" {
 		card.SetValue(fieldName, value)
@@ -172,7 +172,7 @@ func setTypedVcardFieldValue(card *vcard.Card, fieldName, wantType, value string
 	}
 
 	// check if there is already a field of suitable type
-	typedFields := (*card)[fieldName]
+	typedFields := card[fieldName]
 	for _, f := range typedFields {
 		if slices.Contains(f.Params.Types(), wantType) {
 			f.Value = value

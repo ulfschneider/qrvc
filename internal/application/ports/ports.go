@@ -9,17 +9,22 @@ import (
 )
 
 type VCardEditor interface {
-	Edit(card *vcard.Card) error
+	Edit(card vcard.Card) error
 }
 
 type Repository interface {
-	ReadOrCreateVCard() (*vcard.Card, error)
-	WriteVCard(card *vcard.Card) error
-	WriteQRCode(card *vcard.Card) error
+	ReadOrCreateVCard() (vcard.Card, error)
+	WriteVCard(card vcard.Card) error
+	WriteQRCode(card vcard.Card) error
 }
 
-type QREncoder interface {
-	Encode(card *vcard.Card, settings config.QRCodeSettings) (image.Image, error)
+type QRCodec interface {
+	Encode(card vcard.Card, settings config.QRCodeSettings) (image.Image, error)
+}
+
+type VCardCodec interface {
+	Encode(card vcard.Card) ([]byte, error)
+	Decode(vcf []byte) (vcard.Card, error)
 }
 
 type VersionProvider interface {

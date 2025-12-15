@@ -1,10 +1,7 @@
 package filerepo
 
 import (
-	"bytes"
 	"image/png"
-	"io"
-	"io/fs"
 	"path/filepath"
 
 	"github.com/emersion/go-vcard"
@@ -17,77 +14,91 @@ import (
 	"github.com/ulfschneider/qrvc/internal/application/ports"
 )
 
-func NewFileRepo(
+func NewRepo(
 	fileSystem afero.Fs,
-	qrEncoder ports.QREncoder,
+	cardCodec ports.VCardCodec,
+	qrCodec ports.QRCodec,
 	fileSettings cliconfig.FileSettings,
 	appSettings config.Settings,
-) FileRepository {
+) Repository {
 
-	return FileRepository{
+	return Repository{
 		fileSystem:   fileSystem,
-		qrEncoder:    qrEncoder,
-		userNotifier: clinotifier.NewCLINotifier(),
+		cardCodec:    cardCodec,
+		qrCodec:      qrCodec,
+		userNotifier: clinotifier.NewUserNotifier(),
 		fileSettings: fileSettings,
 		appSettings:  appSettings,
 	}
 }
 
-type FileRepository struct {
+type Repository struct {
 	fileSystem   afero.Fs
-	qrEncoder    ports.QREncoder
-	userNotifier clinotifier.CLINotifier
+	cardCodec    ports.VCardCodec
+	qrCodec      ports.QRCodec
+	userNotifier clinotifier.UserNotifier
 	fileSettings cliconfig.FileSettings
 	appSettings  config.Settings
 }
 
-func (fr *FileRepository) ReadOrCreateVCard() (*vcard.Card, error) {
+func (fr *Repository) ReadOrCreateVCard() (vcard.Card, error) {
 
 	if fr.fileSettings.ReadVCardPath == "" && fr.userNotifier.Silent() == false {
 		//no path to a vcard file, create a new card
 		card := make(vcard.Card)
 		card.SetValue(vcard.FieldVersion, fr.appSettings.VCardVersion)
-		ensureNilSafety(&card)
-		return &card, nil
+		ensureNilSafety(card)
+		return card, nil
 	} else if fr.fileSettings.ReadVCardPath == "" && fr.userNotifier.Silent() == true {
 		//no path to a vcard file, but tool runs in silent mode
 		return nil, errors.New("Missing input file path")
 	} else {
-		// we have a path to a vcard file, try to read it
-		file, err := fr.openVcard()
-		if err != nil {
-			return nil, err
-		}
 
-		defer file.Close()
+		fr.fitReadVCardPath()
 
 		fr.userNotifier.Section()
 		fr.userNotifier.Notifyf("Reading vCard file %s", fr.fileSettings.ReadVCardPath)
 		fr.userNotifier.Section()
 
-		if card, err := fr.decodeVcard(file); err != nil {
+		data, err := afero.ReadFile(fr.fileSystem, fr.fileSettings.ReadVCardPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if card, err := fr.cardCodec.Decode(data); err != nil {
 			return nil, err
 		} else {
-			ensureNilSafety(&card)
-			return &card, nil
+			ensureNilSafety(card)
+			return card, nil
 		}
 	}
-
 }
 
-func (fr *FileRepository) WriteVCard(card *vcard.Card) error {
+func (fr *Repository) fitReadVCardPath() {
+	if filepath.Ext(fr.fileSettings.ReadVCardPath) == "" {
+		//try .vcf
+		alternateFilePath := fr.fileSettings.ReadVCardPath + ".vcf"
+		_, err := fr.fileSystem.Stat(alternateFilePath)
+		if err == nil {
+			//when the .vcf ending does not produce an error, this will be the inputFilePath to use
+			fr.fileSettings.ReadVCardPath = alternateFilePath
+		}
+	}
+}
+
+func (fr *Repository) WriteVCard(card vcard.Card) error {
 	file, err := fr.fileSystem.Create(fr.fileSettings.WriteVCardPath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	vCardContent, err := fr.encodeVcard(card)
+	vCardContent, err := fr.cardCodec.Encode(card)
 	if err != nil {
 		return err
 	}
 
-	if _, err := file.WriteString(vCardContent); err != nil {
+	if _, err := file.Write(vCardContent); err != nil {
 		return err
 	} else {
 		fr.userNotifier.Notifyf("The vCard has been written to %s", fr.fileSettings.WriteVCardPath)
@@ -96,8 +107,8 @@ func (fr *FileRepository) WriteVCard(card *vcard.Card) error {
 	return nil
 }
 
-func (fr *FileRepository) WriteQRCode(card *vcard.Card) error {
-	img, err := fr.qrEncoder.Encode(card, fr.appSettings.QRSettings)
+func (fr *Repository) WriteQRCode(card vcard.Card) error {
+	img, err := fr.qrCodec.Encode(card, fr.appSettings.QRSettings)
 	if err != nil {
 		return err
 	}
@@ -118,7 +129,7 @@ func (fr *FileRepository) WriteQRCode(card *vcard.Card) error {
 
 }
 
-func ensureNilSafety(card *vcard.Card) {
+func ensureNilSafety(card vcard.Card) {
 	if card.Name() == nil {
 		name := vcard.Name{}
 		card.SetName(&name)
@@ -127,43 +138,4 @@ func ensureNilSafety(card *vcard.Card) {
 		address := vcard.Address{}
 		card.SetAddress(&address)
 	}
-}
-
-func (fr *FileRepository) openVcard() (fs.File, error) {
-	file, err := fr.fileSystem.Open(fr.fileSettings.ReadVCardPath)
-	if err != nil {
-		if filepath.Ext(fr.fileSettings.ReadVCardPath) == "" {
-			//try .vcf
-			alternateFilePath := fr.fileSettings.ReadVCardPath + ".vcf"
-			file, err = fr.fileSystem.Open(alternateFilePath)
-			if err == nil {
-				//when the .vcf was possible to read, this will be the new inputFilePath
-				fr.fileSettings.ReadVCardPath = alternateFilePath
-			}
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	return file, err
-}
-
-func (fr *FileRepository) decodeVcard(reader io.Reader) (vcard.Card, error) {
-	dec := vcard.NewDecoder(reader)
-	card, err := dec.Decode()
-	if err != nil {
-		return nil, err
-	}
-	return card, nil
-}
-
-func (fr *FileRepository) encodeVcard(card *vcard.Card) (string, error) {
-	var buf bytes.Buffer
-	enc := vcard.NewEncoder(&buf)
-	if err := enc.Encode(*card); err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
 }

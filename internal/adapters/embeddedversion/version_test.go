@@ -20,7 +20,7 @@ func TestVersion(t *testing.T) {
 	envVersion := os.Getenv("VERSION")
 
 	if envVersion != "" {
-		versionProvider := embeddedversion.EmbeddedVersionProvider{}
+		versionProvider := embeddedversion.VersionProvider{}
 		v, err := versionProvider.Version()
 		assert.NoError(t, err)
 		assert.Equal(t, ensureVPrefix(envVersion), v)

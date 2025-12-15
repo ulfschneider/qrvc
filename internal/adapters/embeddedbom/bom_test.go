@@ -12,7 +12,7 @@ func TestBom(t *testing.T) {
 	envVersion := os.Getenv("VERSION")
 
 	if envVersion != "" {
-		bomProvider := embeddedbom.EmbeddedBomProvider{}
+		bomProvider := embeddedbom.BomProvider{}
 		b, err := bomProvider.Bom()
 		assert.NoError(t, err)
 		assert.NotEmpty(t, b)
@@ -22,7 +22,7 @@ func TestBom(t *testing.T) {
 func TestBOMToJSON(t *testing.T) {
 	envVersion := os.Getenv("VERSION")
 	if envVersion != "" {
-		bomProvider := embeddedbom.EmbeddedBomProvider{}
+		bomProvider := embeddedbom.BomProvider{}
 		j, err := bomProvider.MarshalToJSON()
 		assert.NoError(t, err)
 		assert.NotEmpty(t, j)

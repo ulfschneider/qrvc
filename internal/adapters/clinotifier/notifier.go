@@ -9,22 +9,22 @@ import (
 var isSilent bool
 var section bool
 
-type CLINotifier struct {
+type UserNotifier struct {
 }
 
-func NewCLINotifier() CLINotifier {
-	return CLINotifier{}
+func NewUserNotifier() UserNotifier {
+	return UserNotifier{}
 }
 
-func (c *CLINotifier) formaValue(value any) string {
+func (c *UserNotifier) formaValue(value any) string {
 	return color.CyanString("%v", value)
 }
 
-func (c *CLINotifier) formatError(value any) string {
+func (c *UserNotifier) formatError(value any) string {
 	return color.HiRedString("%v", value)
 }
 
-func (c *CLINotifier) format(values ...any) []any {
+func (c *UserNotifier) format(values ...any) []any {
 	formattedValues := []any{}
 	for _, v := range values {
 		if _, isError := v.(error); isError == true {
@@ -37,24 +37,24 @@ func (c *CLINotifier) format(values ...any) []any {
 	return formattedValues
 }
 
-func (c *CLINotifier) NotifyLoud(values ...any) {
+func (c *UserNotifier) NotifyLoud(values ...any) {
 	section = false
 	fmt.Println(values...)
 }
 
-func (c *CLINotifier) NotifyfLoud(format string, values ...any) {
+func (c *UserNotifier) NotifyfLoud(format string, values ...any) {
 	section = false
 	fmt.Printf(format+"\n", c.format(values...)...)
 }
 
-func (c *CLINotifier) Notifyf(format string, values ...any) {
+func (c *UserNotifier) Notifyf(format string, values ...any) {
 	if isSilent == false {
 		section = false
 		fmt.Printf(format+"\n", c.format(values...)...)
 	}
 }
 
-func (c *CLINotifier) Notify(values ...any) {
+func (c *UserNotifier) Notify(values ...any) {
 
 	var isError bool
 	section = false
@@ -71,24 +71,24 @@ func (c *CLINotifier) Notify(values ...any) {
 	}
 }
 
-func (c *CLINotifier) Section() {
+func (c *UserNotifier) Section() {
 	if section == false && isSilent == false {
 		section = true
 		fmt.Println()
 	}
 }
 
-func (c *CLINotifier) SectionLoud() {
+func (c *UserNotifier) SectionLoud() {
 	if section == false {
 		section = true
 		fmt.Println()
 	}
 }
 
-func (c *CLINotifier) SetSilent(silent bool) {
+func (c *UserNotifier) SetSilent(silent bool) {
 	isSilent = silent
 }
 
-func (c *CLINotifier) Silent() bool {
+func (c *UserNotifier) Silent() bool {
 	return isSilent
 }

@@ -2,6 +2,7 @@ package cliconfig
 
 import (
 	"errors"
+	"image/color"
 	"path/filepath"
 	"strings"
 
@@ -14,9 +15,9 @@ import (
 	"github.com/ulfschneider/qrvc/internal/application/services"
 )
 
-type CLIFileSettingsProvider struct {
+type SettingsProvider struct {
 	versionService services.VersionService
-	userNotifier   clinotifier.CLINotifier
+	userNotifier   clinotifier.UserNotifier
 }
 
 type CLIFileSettings struct {
@@ -35,12 +36,12 @@ type CLISettings struct {
 	Bom bool
 }
 
-func NewCLIFileSettingsProvider(versionService services.VersionService) CLIFileSettingsProvider {
-	cliNotifier := clinotifier.NewCLINotifier()
-	return CLIFileSettingsProvider{versionService: versionService, userNotifier: cliNotifier}
+func NewSettingsProvider(versionService services.VersionService) SettingsProvider {
+	cliNotifier := clinotifier.NewUserNotifier()
+	return SettingsProvider{versionService: versionService, userNotifier: cliNotifier}
 }
 
-func (sp *CLIFileSettingsProvider) Load() (CLIFileSettings, error) {
+func (sp *SettingsProvider) Load() (CLIFileSettings, error) {
 
 	silent := pflag.BoolP("silent", "s", false, "The silent mode will not interactively ask for input and instead requires a vCard input file.")
 
@@ -94,16 +95,15 @@ func (sp *CLIFileSettingsProvider) Load() (CLIFileSettings, error) {
 	settings.App.QRSettings.Size = *size
 
 	//bring the colors into the correct format
-	if c, err := csscolorparser.Parse(*foregroundColor); err != nil {
+	if color, err := sp.parseColor(*foregroundColor); err != nil {
 		return CLIFileSettings{}, err
 	} else {
-		settings.App.QRSettings.ForegroundColor = c
+		settings.App.QRSettings.ForegroundColor = color
 	}
-
-	if c, err := csscolorparser.Parse(*backgroundColor); err != nil {
+	if color, err := sp.parseColor(*backgroundColor); err != nil {
 		return CLIFileSettings{}, err
 	} else {
-		settings.App.QRSettings.BackgroundColor = c
+		settings.App.QRSettings.BackgroundColor = color
 	}
 
 	settings.App.QRSettings.RecoveryLevel = qrcode.Low
@@ -113,7 +113,7 @@ func (sp *CLIFileSettingsProvider) Load() (CLIFileSettings, error) {
 	return settings, nil
 }
 
-func (sp *CLIFileSettingsProvider) formatFlagUsage() {
+func (sp *SettingsProvider) formatFlagUsage() {
 	pflag.CommandLine.SortFlags = false
 	pflag.Usage = func() {
 		version, _ := sp.versionService.Version()
@@ -144,5 +144,13 @@ func (sp *CLIFileSettingsProvider) formatFlagUsage() {
 				sp.userNotifier.NotifyLoud(f.Usage)
 			}
 		})
+	}
+}
+
+func (sp *SettingsProvider) parseColor(color string) (color.Color, error) {
+	if c, err := csscolorparser.Parse(color); err != nil {
+		return nil, err
+	} else {
+		return c, nil
 	}
 }

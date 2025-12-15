@@ -12,12 +12,12 @@ import (
 	"github.com/ulfschneider/qrvc/internal/adapters/clinotifier"
 )
 
-type EmbeddedBomProvider struct {
-	userNotifier clinotifier.CLINotifier
+type BomProvider struct {
+	userNotifier clinotifier.UserNotifier
 }
 
-func NewBomProvider() EmbeddedBomProvider {
-	return EmbeddedBomProvider{userNotifier: clinotifier.NewCLINotifier()}
+func NewBomProvider() BomProvider {
+	return BomProvider{userNotifier: clinotifier.NewUserNotifier()}
 }
 
 //go:embed generated/*
@@ -29,7 +29,7 @@ const licensesPath = "generated/licenses"
 
 var licenseRegex = regexp.MustCompile(`(?i)^(license|licence|copying|notice|readme)(\.[^.]+)?$`)
 
-func (bp *EmbeddedBomProvider) Bom() (*cyclonedx.BOM, error) {
+func (bp *BomProvider) Bom() (*cyclonedx.BOM, error) {
 
 	f, err := generated.Open(sbomPath)
 	if err != nil {
@@ -57,7 +57,7 @@ func (bp *EmbeddedBomProvider) Bom() (*cyclonedx.BOM, error) {
 	return &bom, nil
 }
 
-func (bp *EmbeddedBomProvider) MarshalToJSON() ([]byte, error) {
+func (bp *BomProvider) MarshalToJSON() ([]byte, error) {
 
 	bom, err := bp.Bom()
 
@@ -79,7 +79,7 @@ func (bp *EmbeddedBomProvider) MarshalToJSON() ([]byte, error) {
 	}
 }
 
-func (bp *EmbeddedBomProvider) WriteBomJSON() error {
+func (bp *BomProvider) WriteBomJSON() error {
 	json, err := bp.MarshalToJSON()
 
 	if err != nil {
@@ -90,7 +90,7 @@ func (bp *EmbeddedBomProvider) WriteBomJSON() error {
 	return nil
 }
 
-func (bp *EmbeddedBomProvider) loadEmbeddedLicenses(dir string, licenses *map[string]string) error {
+func (bp *BomProvider) loadEmbeddedLicenses(dir string, licenses *map[string]string) error {
 
 	entries, err := generated.ReadDir(path.Join(licensesPath, dir))
 	if err != nil {
@@ -122,7 +122,7 @@ func (bp *EmbeddedBomProvider) loadEmbeddedLicenses(dir string, licenses *map[st
 	return nil
 }
 
-func (bp *EmbeddedBomProvider) injectLicenseText(bom *cyclonedx.BOM, licenseMap *map[string]string) error {
+func (bp *BomProvider) injectLicenseText(bom *cyclonedx.BOM, licenseMap *map[string]string) error {
 	if bom.Components == nil {
 		return nil
 	}
@@ -159,7 +159,7 @@ func (bp *EmbeddedBomProvider) injectLicenseText(bom *cyclonedx.BOM, licenseMap 
 	return nil
 }
 
-func (bp *EmbeddedBomProvider) extractLicenseId(c *cyclonedx.Component) (string, error) {
+func (bp *BomProvider) extractLicenseId(c *cyclonedx.Component) (string, error) {
 
 	if c.Evidence != nil && c.Evidence.Licenses != nil {
 		evidence := *c.Evidence.Licenses
@@ -176,7 +176,7 @@ func (bp *EmbeddedBomProvider) extractLicenseId(c *cyclonedx.Component) (string,
 	return "", nil
 }
 
-func (bp *EmbeddedBomProvider) extractModulePath(c *cyclonedx.Component) string {
+func (bp *BomProvider) extractModulePath(c *cyclonedx.Component) string {
 	if c.PackageURL != "" {
 
 		purl, err := packageurl.FromString(c.PackageURL)
