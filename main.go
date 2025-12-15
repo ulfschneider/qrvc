@@ -3,82 +3,95 @@ package main
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/spf13/afero"
-	"github.com/ulfschneider/qrvc/internal/appmeta"
-	"github.com/ulfschneider/qrvc/internal/cli"
-	"github.com/ulfschneider/qrvc/internal/qrcard"
-	"github.com/ulfschneider/qrvc/internal/settings"
+
+	"github.com/ulfschneider/qrvc/internal/adapters/cliconfig"
+	"github.com/ulfschneider/qrvc/internal/adapters/clieditor"
+	"github.com/ulfschneider/qrvc/internal/adapters/clinotifier"
+
+	"github.com/ulfschneider/qrvc/internal/adapters/embeddedbom"
+	"github.com/ulfschneider/qrvc/internal/adapters/embeddedversion"
+	"github.com/ulfschneider/qrvc/internal/adapters/filerepo"
+	"github.com/ulfschneider/qrvc/internal/adapters/qrencoder"
+	"github.com/ulfschneider/qrvc/internal/application/services"
 
 	"github.com/charmbracelet/huh"
 )
 
-func runQRCard(settings *settings.Settings) error {
-	filesystem := afero.NewOsFs()
+func runQRCard(settings cliconfig.CLIFileSettings) error {
+	qrEncoder := qrencoder.NewQRCardEncoder()
+	repo := filerepo.NewFileRepo(
+		afero.NewOsFs(),
+		&qrEncoder,
+		settings.Files,
+		settings.App)
 
-	vcardContent, err := qrcard.PrepareVCard(settings.InputFilePath, *settings.VCardVersion, *settings.Silent, filesystem)
+	editor := clieditor.NewCLIVCardEditor()
 
-	if err != nil {
-		return err
-	}
+	cardService := services.NewQRCardService(settings.App, &repo, &editor)
 
-	err = qrcard.WriteResults(vcardContent, settings.OutputSettings, filesystem)
+	err := cardService.TransformCard()
+
 	return err
 }
 
 func runBOM() error {
-	bom, err := appmeta.LoadEmbeddedBOM()
-	if err != nil {
-		return err
-	}
+	bomProvider := embeddedbom.NewBomProvider()
+	bomService := services.NewBomService(&bomProvider)
 
-	json, err := appmeta.MarshalBOMToJSON(bom)
-	if err != nil {
-		return err
-	} else {
-		fmt.Println(string(json))
-	}
-	return nil
+	err := bomService.WriteBomJSON()
+
+	return err
 }
 
-func finalize(args *settings.Settings, err error) {
+func finalize(settings cliconfig.CLIFileSettings, err error) {
+	userNotifier := clinotifier.NewCLINotifier()
 	if errors.Is(err, huh.ErrUserAborted) {
 		// User pressed Ctrl-C
-		cli.Println("You stopped with CTRL-C")
-		return
+		userNotifier.Notify("You stopped with CTRL-C")
 	} else if err != nil {
 		//any other error
-		cli.Println(err)
+		userNotifier.Notify(err)
 	}
-	if args != nil && !*args.Bom {
+	if settings.CLI.Bom == false {
 		//say good bye
-		cli.Println("👋")
+		userNotifier.Section()
+		userNotifier.Notify("👋")
 	}
 
+}
+
+func loadConfig() (cliconfig.CLIFileSettings, error) {
+
+	versionProvider := embeddedversion.NewVersionProvider()
+	versionService := services.NewVersionService(&versionProvider)
+	settingsProvider := cliconfig.NewCLIFileSettingsProvider(versionService)
+
+	settings, err := settingsProvider.Load()
+	if err != nil {
+		return cliconfig.CLIFileSettings{}, err
+	}
+	return settings, nil
 }
 
 func main() {
 
-	var err error
-	var args *settings.Settings
-
-	defer func() {
-		finalize(args, err)
-	}()
-
-	if args, err = settings.PrepareSettings(); err != nil {
-		//terminate the program but still run the finalize function
+	settings, err := loadConfig()
+	if err != nil {
 		return
 	}
+	defer func() {
+		finalize(settings, err)
+	}()
 
-	if !*args.Bom {
-		cli.Println("You are running qrvc, a tool to prepare a QR code from a vCard.")
-		cli.Println("Get a list of options by starting the program in the form:", cli.SprintValue("qrvc -h"))
-		cli.Println("Stop the program by pressing", cli.SprintValue("CTRL-C"))
-		cli.Println()
-
-		err = runQRCard(args)
+	if !settings.CLI.Bom {
+		userNotifier := clinotifier.NewCLINotifier()
+		userNotifier.Notify("You are running qrvc, a tool to prepare a QR code from a vCard.")
+		userNotifier.Notifyf("Get a list of options by starting the program in the form: %s", "qrvc -h")
+		userNotifier.Notifyf("Stop the program by pressing %s", "CTRL-C")
+		userNotifier.Section()
+		err = runQRCard(settings)
 	} else {
 		err = runBOM()
 	}

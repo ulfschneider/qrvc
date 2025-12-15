@@ -1,4 +1,4 @@
-package qrcard
+package filerepo_test
 
 import (
 	"image"
@@ -10,7 +10,12 @@ import (
 	"github.com/skip2/go-qrcode"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"github.com/ulfschneider/qrvc/internal/settings"
+	"github.com/ulfschneider/qrvc/internal/adapters/cliconfig"
+	"github.com/ulfschneider/qrvc/internal/adapters/filerepo"
+
+	"github.com/ulfschneider/qrvc/internal/adapters/qrencoder"
+
+	"github.com/ulfschneider/qrvc/internal/application/services"
 
 	"github.com/emersion/go-vcard"
 )
@@ -34,17 +39,40 @@ func normalizeNewLines(s string) string {
 	return strings.ReplaceAll(s, "\r\n", "\n")
 }
 
+type versionProvider struct {
+}
+
+func (vp *versionProvider) Version() (string, error) {
+	return "TEST VERSION", nil
+}
+
+func createTestSettings() cliconfig.CLIFileSettings {
+	versionService := services.NewVersionService(&versionProvider{})
+	settingsProvider := cliconfig.NewCLIFileSettingsProvider(versionService)
+	settings, _ := settingsProvider.Load()
+
+	return settings
+}
+
+func createTestRepo(settings cliconfig.CLIFileSettings) filerepo.FileRepository {
+	fs := afero.NewMemMapFs()
+	repo := filerepo.NewFileRepo(fs, qrencoder.NewQRCardEncoder(), settings.Files, settings.App)
+	return repo
+}
+
 func TestMakeVCardInstanceFromNonExistingFile(t *testing.T) {
 	filesystem := afero.NewMemMapFs()
-	filePath := "vcard"
+	settings := createTestSettings()
+	settings.Files.ReadVCardPath = "vcard"
+	repo := createTestRepo(settings)
 
 	//vcard file does not exist, there is nothing to read, must return an error
-	vcard, err := makeVCardInstance(&filePath, "3.0", true, filesystem)
+	vcard, err := repo.ReadOrCreateVCard()
 	assert.Error(t, err)
 	assert.Nil(t, vcard)
 
 	//file does still not exist
-	_, err = filesystem.Stat(filePath)
+	_, err = filesystem.Stat(settings.Files.ReadVCardPath)
 	assert.Error(t, err)
 }
 

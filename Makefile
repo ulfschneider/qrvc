@@ -12,10 +12,11 @@ ARCHS := amd64 arm64
 # Names for building
 BINARY_NAME := qrvc
 DIST_FOLDER := dist
-GENERATED_FOLDER := internal/appmeta/generated
-LICENSES_FOLDER:= $(GENERATED_FOLDER)/licenses
-SBOM_FILE  := $(GENERATED_FOLDER)/sbom.json
-VERSION_FILE := $(GENERATED_FOLDER)/version.txt
+BOM_GENERATED_FOLDER := internal/adapters/embeddedbom/generated
+LICENSES_FOLDER:= $(BOM_GENERATED_FOLDER)/licenses
+BOM_FILE  := $(BOM_GENERATED_FOLDER)/bom.json
+VERSION_GENERATED_FOLDER := internal/adapters/embeddedversion/generated
+BOM_VERSION_FILE := $(VERSION_GENERATED_FOLDER)/version.txt
 
 # Strip leading v, then prepend exactly one v
 NORMALIZED_VERSION := v$(patsubst v%,%,$(VERSION))
@@ -41,7 +42,7 @@ build:
 	@ $(MAKE) check
 
 	@echo
-	@ $(MAKE) sbom
+	@ $(MAKE) bom
 
 	@echo
 	@ $(MAKE) test
@@ -94,15 +95,16 @@ release:
 	@printf "%s" "$(NORMALIZED_VERSION)" > $(VERSION_FILE)
 
 	@echo
-	@ $(MAKE) sbom
+	@ $(MAKE) bom
 
 	@echo
 	@ $(MAKE) test
 
 	@echo
 	@echo "Adding generated content to release branch"
-	git add --force $(GENERATED_FOLDER)
-	git commit -m "Add SBOM and version for release $(NORMALIZED_VERSION)"
+	git add --force $(BOM_GENERATED_FOLDER)
+	git add --force $(VERSION_GENERATED_FOLDER)
+	git commit -m "Add BOM and version for release $(NORMALIZED_VERSION)"
 
 	@echo
 	@echo "Creating or updating tag $(NORMALIZED_VERSION)"
@@ -126,16 +128,16 @@ test:
 	@echo "Automated tests"
 	@go test ./...
 
-## sbom: check and prepare licenses and sbom for embedding them into the build
-.PHONY: sbom
-sbom:
+## bom: check and prepare licenses and bom for embedding them into the build
+.PHONY: bom
+bom:
 	@echo "Preparing licenses"
 	rm -rf $(LICENSES_FOLDER);
 	go-licenses check ./... --allowed_licenses=$(ALLOWED_LICENSES) --ignore=$(IGNORE_LICENSES)
 	go-licenses save ./... --save_path=$(LICENSES_FOLDER) --ignore=$(IGNORE_LICENSES)
 	@echo
-	@echo "Preparing SBOM"
-	@cyclonedx-gomod app -json=true -licenses=true -output=$(SBOM_FILE)
+	@echo "Preparing BOM"
+	@cyclonedx-gomod app -json=true -licenses=true -output=$(BOM_FILE)
 
 
 ## update: update all dependencies
@@ -158,7 +160,7 @@ update-tools:
 check:
 	@ $(MAKE) update-tools
 	@echo
-	@echo "Tidying up the mod file and check dependencies and code"
+	@echo "Tidying up the mod file, format code, check code quality, and check dependencies for vulnerabilities"
 	go mod tidy
 	go mod verify
 	gofmt -s -w  .
