@@ -20,7 +20,7 @@ BOM_GENERATED_FOLDER := internal/adapters/bom/embedded/generated
 LICENSES_FOLDER:= $(BOM_GENERATED_FOLDER)/licenses
 BOM_FILE  := $(BOM_GENERATED_FOLDER)/bom.json
 VERSION_GENERATED_FOLDER := internal/adapters/version/embedded/generated
-BOM_VERSION_FILE := $(VERSION_GENERATED_FOLDER)/version.txt
+VERSION_FILE := $(VERSION_GENERATED_FOLDER)/version.txt
 
 # Strip leading v, then prepend exactly one v
 NORMALIZED_VERSION := v$(patsubst v%,%,$(VERSION))
