@@ -1,11 +1,12 @@
-package clieditor
+package editorcli
 
 import (
 	"testing"
 
 	"github.com/emersion/go-vcard"
 	"github.com/stretchr/testify/assert"
-	"github.com/ulfschneider/qrvc/internal/adapters/testutil"
+
+	testutil "github.com/ulfschneider/qrvc/internal/adapters/test/util"
 	qrcard "github.com/ulfschneider/qrvc/internal/domain"
 )
 

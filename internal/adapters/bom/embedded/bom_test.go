@@ -1,18 +1,18 @@
-package embeddedbom_test
+package bomembedded_test
 
 import (
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ulfschneider/qrvc/internal/adapters/embeddedbom"
+	bomembedded "github.com/ulfschneider/qrvc/internal/adapters/bom/embedded"
 )
 
 func TestBom(t *testing.T) {
 	envVersion := os.Getenv("VERSION")
 
 	if envVersion != "" {
-		bomProvider := embeddedbom.BomProvider{}
+		bomProvider := bomembedded.BomProvider{}
 		b, err := bomProvider.Bom()
 		assert.NoError(t, err)
 		assert.NotEmpty(t, b)
@@ -22,7 +22,7 @@ func TestBom(t *testing.T) {
 func TestBOMToJSON(t *testing.T) {
 	envVersion := os.Getenv("VERSION")
 	if envVersion != "" {
-		bomProvider := embeddedbom.BomProvider{}
+		bomProvider := bomembedded.BomProvider{}
 		j, err := bomProvider.MarshalToJSON()
 		assert.NoError(t, err)
 		assert.NotEmpty(t, j)

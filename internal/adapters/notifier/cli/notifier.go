@@ -1,4 +1,4 @@
-package clinotifier
+package notifiercli
 
 import (
 	"fmt"

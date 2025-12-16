@@ -1,4 +1,4 @@
-package filerepo
+package repofile
 
 import (
 	"image/png"
@@ -7,9 +7,9 @@ import (
 	"github.com/emersion/go-vcard"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
-	"github.com/ulfschneider/qrvc/internal/adapters/cliconfig"
-	"github.com/ulfschneider/qrvc/internal/adapters/clinotifier"
 
+	configcli "github.com/ulfschneider/qrvc/internal/adapters/config/cli"
+	notifiercli "github.com/ulfschneider/qrvc/internal/adapters/notifier/cli"
 	"github.com/ulfschneider/qrvc/internal/application/config"
 	"github.com/ulfschneider/qrvc/internal/application/ports"
 )
@@ -18,7 +18,7 @@ func NewRepo(
 	fileSystem afero.Fs,
 	cardCodec ports.VCardCodec,
 	qrCodec ports.QRCodec,
-	fileSettings cliconfig.FileSettings,
+	fileSettings configcli.FileSettings,
 	appSettings config.Settings,
 ) Repository {
 
@@ -26,7 +26,7 @@ func NewRepo(
 		fileSystem:   fileSystem,
 		cardCodec:    cardCodec,
 		qrCodec:      qrCodec,
-		userNotifier: clinotifier.NewUserNotifier(),
+		userNotifier: notifiercli.NewUserNotifier(),
 		fileSettings: fileSettings,
 		appSettings:  appSettings,
 	}
@@ -36,8 +36,8 @@ type Repository struct {
 	fileSystem   afero.Fs
 	cardCodec    ports.VCardCodec
 	qrCodec      ports.QRCodec
-	userNotifier clinotifier.UserNotifier
-	fileSettings cliconfig.FileSettings
+	userNotifier notifiercli.UserNotifier
+	fileSettings configcli.FileSettings
 	appSettings  config.Settings
 }
 

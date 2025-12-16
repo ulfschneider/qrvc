@@ -6,32 +6,31 @@ import (
 
 	"github.com/spf13/afero"
 
-	"github.com/ulfschneider/qrvc/internal/adapters/cliconfig"
-	"github.com/ulfschneider/qrvc/internal/adapters/clieditor"
-	"github.com/ulfschneider/qrvc/internal/adapters/clinotifier"
-	"github.com/ulfschneider/qrvc/internal/adapters/qrcodec"
-	"github.com/ulfschneider/qrvc/internal/adapters/vcardcodec"
-
-	"github.com/ulfschneider/qrvc/internal/adapters/embeddedbom"
-	"github.com/ulfschneider/qrvc/internal/adapters/embeddedversion"
-	"github.com/ulfschneider/qrvc/internal/adapters/filerepo"
+	bomembedded "github.com/ulfschneider/qrvc/internal/adapters/bom/embedded"
+	qrcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/qr"
+	vcardcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/vcard"
+	configcli "github.com/ulfschneider/qrvc/internal/adapters/config/cli"
+	editorcli "github.com/ulfschneider/qrvc/internal/adapters/editor/cli"
+	notifiercli "github.com/ulfschneider/qrvc/internal/adapters/notifier/cli"
+	repofile "github.com/ulfschneider/qrvc/internal/adapters/repo/file"
+	versionembedded "github.com/ulfschneider/qrvc/internal/adapters/version/embedded"
 
 	"github.com/ulfschneider/qrvc/internal/application/services"
 
 	"github.com/charmbracelet/huh"
 )
 
-func runQRCard(settings cliconfig.CLIFileSettings) error {
+func runQRCard(settings configcli.CLIFileSettings) error {
 	cardCodec := vcardcodec.NewCodec()
 	qrCodec := qrcodec.NewCodec()
-	repo := filerepo.NewRepo(
+	repo := repofile.NewRepo(
 		afero.NewOsFs(),
 		&cardCodec,
 		&qrCodec,
 		settings.Files,
 		settings.App)
 
-	editor := clieditor.NewCardEditor()
+	editor := editorcli.NewCardEditor()
 
 	cardService := services.NewQRCardService(settings.App, &repo, &editor)
 
@@ -41,7 +40,7 @@ func runQRCard(settings cliconfig.CLIFileSettings) error {
 }
 
 func runBOM() error {
-	bomProvider := embeddedbom.NewBomProvider()
+	bomProvider := bomembedded.NewBomProvider()
 	bomService := services.NewBomService(&bomProvider)
 
 	err := bomService.WriteBomJSON()
@@ -49,8 +48,8 @@ func runBOM() error {
 	return err
 }
 
-func finalize(settings cliconfig.CLIFileSettings, err error) {
-	userNotifier := clinotifier.NewUserNotifier()
+func finalize(settings configcli.CLIFileSettings, err error) {
+	userNotifier := notifiercli.NewUserNotifier()
 	if errors.Is(err, huh.ErrUserAborted) {
 		// User pressed Ctrl-C
 		userNotifier.Notify("You stopped with CTRL-C")
@@ -66,15 +65,15 @@ func finalize(settings cliconfig.CLIFileSettings, err error) {
 
 }
 
-func loadConfig() (cliconfig.CLIFileSettings, error) {
+func loadConfig() (configcli.CLIFileSettings, error) {
 
-	versionProvider := embeddedversion.NewVersionProvider()
+	versionProvider := versionembedded.NewVersionProvider()
 	versionService := services.NewVersionService(&versionProvider)
-	settingsProvider := cliconfig.NewSettingsProvider(versionService)
+	settingsProvider := configcli.NewSettingsProvider(versionService)
 
 	settings, err := settingsProvider.Load()
 	if err != nil {
-		return cliconfig.CLIFileSettings{}, err
+		return configcli.CLIFileSettings{}, err
 	}
 	return settings, nil
 }
@@ -90,7 +89,7 @@ func main() {
 	}()
 
 	if !settings.CLI.Bom {
-		userNotifier := clinotifier.NewUserNotifier()
+		userNotifier := notifiercli.NewUserNotifier()
 		userNotifier.Notify("You are running qrvc, a tool to prepare a QR code from a vCard.")
 		userNotifier.Notifyf("Get a list of options by starting the program in the form: %s", "qrvc -h")
 		userNotifier.Notifyf("Stop the program by pressing %s", "CTRL-C")

@@ -5,7 +5,8 @@ import (
 
 	"github.com/emersion/go-vcard"
 	"github.com/skip2/go-qrcode"
-	"github.com/ulfschneider/qrvc/internal/adapters/vcardcodec"
+
+	vcardcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/vcard"
 	"github.com/ulfschneider/qrvc/internal/application/config"
 )
 

@@ -1,4 +1,4 @@
-package cliconfig
+package configcli
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/skip2/go-qrcode"
 	"github.com/spf13/pflag"
 
-	"github.com/ulfschneider/qrvc/internal/adapters/clinotifier"
+	notifiercli "github.com/ulfschneider/qrvc/internal/adapters/notifier/cli"
 	"github.com/ulfschneider/qrvc/internal/application/config"
 	"github.com/ulfschneider/qrvc/internal/application/services"
 )
@@ -19,7 +19,7 @@ import (
 type SettingsProvider struct {
 	flagSet        *pflag.FlagSet
 	versionService services.VersionService
-	userNotifier   clinotifier.UserNotifier
+	userNotifier   notifiercli.UserNotifier
 }
 
 type CLIFileSettings struct {
@@ -40,7 +40,7 @@ type CLISettings struct {
 
 func NewSettingsProvider(versionService services.VersionService) SettingsProvider {
 	flagSet := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
-	cliNotifier := clinotifier.NewUserNotifier()
+	cliNotifier := notifiercli.NewUserNotifier()
 	return SettingsProvider{flagSet: flagSet, versionService: versionService, userNotifier: cliNotifier}
 }
 

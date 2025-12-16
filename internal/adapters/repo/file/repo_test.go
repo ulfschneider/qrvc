@@ -1,4 +1,4 @@
-package filerepo_test
+package repofile_test
 
 import (
 	"image"
@@ -7,28 +7,29 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
-	"github.com/ulfschneider/qrvc/internal/adapters/cliconfig"
-	"github.com/ulfschneider/qrvc/internal/adapters/filerepo"
-	"github.com/ulfschneider/qrvc/internal/adapters/qrcodec"
-	"github.com/ulfschneider/qrvc/internal/adapters/testutil"
-	"github.com/ulfschneider/qrvc/internal/adapters/vcardcodec"
+
+	qrcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/qr"
+	vcardcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/vcard"
+	configcli "github.com/ulfschneider/qrvc/internal/adapters/config/cli"
+	repofile "github.com/ulfschneider/qrvc/internal/adapters/repo/file"
+	testutil "github.com/ulfschneider/qrvc/internal/adapters/test/util"
 
 	"github.com/ulfschneider/qrvc/internal/application/services"
 )
 
-func createTestSettings() cliconfig.CLIFileSettings {
+func createTestSettings() configcli.CLIFileSettings {
 
 	versionService := services.NewVersionService(testutil.CreateVersionProvider())
-	settingsProvider := cliconfig.NewSettingsProvider(versionService)
+	settingsProvider := configcli.NewSettingsProvider(versionService)
 	settings, _ := settingsProvider.Load()
 
 	return settings
 }
 
-func createTestRepo(fs afero.Fs, settings cliconfig.CLIFileSettings) filerepo.Repository {
+func createTestRepo(fs afero.Fs, settings configcli.CLIFileSettings) repofile.Repository {
 	cardCodec := vcardcodec.NewCodec()
 	qrCodec := qrcodec.NewCodec()
-	repo := filerepo.NewRepo(fs, &cardCodec, &qrCodec, settings.Files, settings.App)
+	repo := repofile.NewRepo(fs, &cardCodec, &qrCodec, settings.Files, settings.App)
 	return repo
 }
 
@@ -104,7 +105,7 @@ func TestWriteVCard(t *testing.T) {
 	err = repo.WriteQRCode(expectedCard)
 	assert.NoError(t, err)
 	expectedCode := testutil.CreateQRCode(expectedCard, settings.App.QRSettings)
-	file, err := filesystem.Open("vcard.png")
+	file, _ := filesystem.Open("vcard.png")
 	actualCode, format, err := image.Decode(file)
 	assert.NoError(t, err)
 	assert.Equal(t, "png", format)

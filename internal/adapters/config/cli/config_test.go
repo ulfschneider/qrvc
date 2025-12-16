@@ -1,4 +1,4 @@
-package cliconfig_test
+package configcli_test
 
 import (
 	"testing"
@@ -6,15 +6,16 @@ import (
 	"github.com/mazznoer/csscolorparser"
 	"github.com/skip2/go-qrcode"
 	"github.com/stretchr/testify/assert"
-	"github.com/ulfschneider/qrvc/internal/adapters/cliconfig"
-	"github.com/ulfschneider/qrvc/internal/adapters/testutil"
+	configcli "github.com/ulfschneider/qrvc/internal/adapters/config/cli"
+	testutil "github.com/ulfschneider/qrvc/internal/adapters/test/util"
+
 	"github.com/ulfschneider/qrvc/internal/application/services"
 )
 
 func TestDefaultSettings(t *testing.T) {
 
 	versionService := services.NewVersionService(testutil.CreateVersionProvider())
-	settingsProvider := cliconfig.NewSettingsProvider(versionService)
+	settingsProvider := configcli.NewSettingsProvider(versionService)
 
 	settings, err := settingsProvider.Load()
 	assert.NoError(t, err)

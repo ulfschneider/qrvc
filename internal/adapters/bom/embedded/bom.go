@@ -1,4 +1,4 @@
-package embeddedbom
+package bomembedded
 
 import (
 	"bytes"
@@ -9,15 +9,15 @@ import (
 	"github.com/CycloneDX/cyclonedx-go"
 	"github.com/package-url/packageurl-go"
 	"github.com/pkg/errors"
-	"github.com/ulfschneider/qrvc/internal/adapters/clinotifier"
+	notifiercli "github.com/ulfschneider/qrvc/internal/adapters/notifier/cli"
 )
 
 type BomProvider struct {
-	userNotifier clinotifier.UserNotifier
+	userNotifier notifiercli.UserNotifier
 }
 
 func NewBomProvider() BomProvider {
-	return BomProvider{userNotifier: clinotifier.NewUserNotifier()}
+	return BomProvider{userNotifier: notifiercli.NewUserNotifier()}
 }
 
 //go:embed generated/*

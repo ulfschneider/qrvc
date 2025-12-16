@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ulfschneider/qrvc/internal/adapters/testutil"
-	"github.com/ulfschneider/qrvc/internal/adapters/vcardcodec"
+	vcardcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/vcard"
+	testutil "github.com/ulfschneider/qrvc/internal/adapters/test/util"
 )
 
 func TestVCardCodec(t *testing.T) {

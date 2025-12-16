@@ -1,4 +1,4 @@
-package embeddedversion
+package versionembedded
 
 import (
 	"embed"

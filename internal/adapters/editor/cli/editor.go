@@ -1,4 +1,4 @@
-package clieditor
+package editorcli
 
 import (
 	"strings"

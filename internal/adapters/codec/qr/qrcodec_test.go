@@ -9,9 +9,10 @@ import (
 	"github.com/skip2/go-qrcode"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ulfschneider/qrvc/internal/adapters/qrcodec"
-	"github.com/ulfschneider/qrvc/internal/adapters/testutil"
-	"github.com/ulfschneider/qrvc/internal/adapters/vcardcodec"
+	qrcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/qr"
+	vcardcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/vcard"
+	testutil "github.com/ulfschneider/qrvc/internal/adapters/test/util"
+
 	"github.com/ulfschneider/qrvc/internal/application/config"
 )
 

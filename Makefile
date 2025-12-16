@@ -1,3 +1,7 @@
+# go path
+GOPATH := $(shell go env GOPATH)
+GOBINPATH := $(GOPATH)/bin
+
 # Tools used during build
 TOOLS :=	github.com/google/go-licenses golang.org/x/vuln/cmd/govulncheck github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod github.com/fzipp/gocyclo/cmd/gocyclo github.com/gordonklaus/ineffassign github.com/client9/misspell/cmd/misspell
 
@@ -12,10 +16,10 @@ ARCHS := amd64 arm64
 # Names for building
 BINARY_NAME := qrvc
 DIST_FOLDER := dist
-BOM_GENERATED_FOLDER := internal/adapters/embeddedbom/generated
+BOM_GENERATED_FOLDER := internal/adapters/bom/embedded/generated
 LICENSES_FOLDER:= $(BOM_GENERATED_FOLDER)/licenses
 BOM_FILE  := $(BOM_GENERATED_FOLDER)/bom.json
-VERSION_GENERATED_FOLDER := internal/adapters/embeddedversion/generated
+VERSION_GENERATED_FOLDER := internal/adapters/version/embedded/generated
 BOM_VERSION_FILE := $(VERSION_GENERATED_FOLDER)/version.txt
 
 # Strip leading v, then prepend exactly one v
@@ -67,8 +71,8 @@ build:
 	@ . ./.env; \
 	if [ -n "$$AT_HOME" ]; then \
 	   echo;\
-      echo "I´m at home, therefore copying $(DIST_FOLDER)/darwin/arm64/qrvc to ~/go/bin/"; \
-      cp "$(DIST_FOLDER)/darwin/arm64/qrvc" ~/go/bin/; \
+      echo "I´m at home, therefore copying $(DIST_FOLDER)/darwin/arm64/qrvc to $(GOBINPATH)"; \
+      cp "$(DIST_FOLDER)/darwin/arm64/qrvc" $(GOBINPATH); \
    fi
 
 	@ echo "👋 Binaries are built"

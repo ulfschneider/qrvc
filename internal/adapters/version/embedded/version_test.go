@@ -1,4 +1,4 @@
-package embeddedversion_test
+package versionembedded_test
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/ulfschneider/qrvc/internal/adapters/embeddedversion"
+	versionembedded "github.com/ulfschneider/qrvc/internal/adapters/version/embedded"
 )
 
 func ensureVPrefix(s string) string {
@@ -20,7 +20,7 @@ func TestVersion(t *testing.T) {
 	envVersion := os.Getenv("VERSION")
 
 	if envVersion != "" {
-		versionProvider := embeddedversion.VersionProvider{}
+		versionProvider := versionembedded.VersionProvider{}
 		v, err := versionProvider.Version()
 		assert.NoError(t, err)
 		assert.Equal(t, ensureVPrefix(envVersion), v)
