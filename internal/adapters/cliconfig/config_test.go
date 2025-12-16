@@ -7,19 +7,13 @@ import (
 	"github.com/skip2/go-qrcode"
 	"github.com/stretchr/testify/assert"
 	"github.com/ulfschneider/qrvc/internal/adapters/cliconfig"
+	"github.com/ulfschneider/qrvc/internal/adapters/testutil"
 	"github.com/ulfschneider/qrvc/internal/application/services"
 )
 
-type versionProvider struct {
-}
-
-func (vp versionProvider) Version() (string, error) {
-	return "TEST VERSION", nil
-}
-
 func TestDefaultSettings(t *testing.T) {
 
-	versionService := services.NewVersionService(versionProvider{})
+	versionService := services.NewVersionService(testutil.CreateVersionProvider())
 	settingsProvider := cliconfig.NewSettingsProvider(versionService)
 
 	settings, err := settingsProvider.Load()

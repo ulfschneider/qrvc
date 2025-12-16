@@ -5,43 +5,18 @@ import (
 	"image/draw"
 	"testing"
 
-	"github.com/emersion/go-vcard"
 	"github.com/mazznoer/csscolorparser"
 	"github.com/skip2/go-qrcode"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ulfschneider/qrvc/internal/adapters/qrcodec"
+	"github.com/ulfschneider/qrvc/internal/adapters/testutil"
 	"github.com/ulfschneider/qrvc/internal/adapters/vcardcodec"
 	"github.com/ulfschneider/qrvc/internal/application/config"
 )
 
-func makeTestCard() vcard.Card {
-	card := vcard.Card{}
-	card.SetValue(vcard.FieldVersion, "3.0")
-	card.SetAddress(&vcard.Address{
-		PostOfficeBox:   "Post office box",
-		ExtendedAddress: "Extended street address",
-		StreetAddress:   "Street address",
-		Locality:        "City",
-		PostalCode:      "Postal code",
-		Country:         "Country"})
-	card.SetValue(vcard.FieldEmail, "EMAIL")
-	card.SetValue(vcard.FieldURL, "Web address")
-	card.SetValue(vcard.FieldTitle, "Job title")
-	card.SetValue(vcard.FieldOrganization, "Organization")
-	card.SetGender(vcard.SexNone, "")
-	card.SetName(&vcard.Name{
-		GivenName:       "Given name",
-		FamilyName:      "Family name",
-		AdditionalName:  "Additional name",
-		HonorificPrefix: "Prefix",
-		HonorificSuffix: "Suffix"})
-
-	return card
-}
-
 func TestQRCodec(t *testing.T) {
-	card := makeTestCard()
+	card := testutil.CreateCard()
 	cardCodec := vcardcodec.NewCodec()
 	vcf, _ := cardCodec.Encode(card)
 

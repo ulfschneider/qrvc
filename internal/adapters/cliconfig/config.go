@@ -3,6 +3,7 @@ package cliconfig
 import (
 	"errors"
 	"image/color"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -16,6 +17,7 @@ import (
 )
 
 type SettingsProvider struct {
+	flagSet        *pflag.FlagSet
 	versionService services.VersionService
 	userNotifier   clinotifier.UserNotifier
 }
@@ -37,32 +39,33 @@ type CLISettings struct {
 }
 
 func NewSettingsProvider(versionService services.VersionService) SettingsProvider {
+	flagSet := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 	cliNotifier := clinotifier.NewUserNotifier()
-	return SettingsProvider{versionService: versionService, userNotifier: cliNotifier}
+	return SettingsProvider{flagSet: flagSet, versionService: versionService, userNotifier: cliNotifier}
 }
 
 func (sp *SettingsProvider) Load() (CLIFileSettings, error) {
 
-	silent := pflag.BoolP("silent", "s", false, "The silent mode will not interactively ask for input and instead requires a vCard input file.")
+	silent := sp.flagSet.BoolP("silent", "s", false, "The silent mode will not interactively ask for input and instead requires a vCard input file.")
 
-	readVCardPath := pflag.StringP("input", "i", "", "The path and name of the vCard input file. When you provide a file name without extension, .vcf will automatically added as an extension.")
+	readVCardPath := sp.flagSet.StringP("input", "i", "", "The path and name of the vCard input file. When you provide a file name without extension, .vcf will automatically added as an extension.")
 
-	writePath := pflag.StringP("output", "o", "", "The path and name for the output. Please do not add any file extension, as those will be added automatically.\nWill receive the extension .png for the QR code and .vcf for the vCard. The input file basename will be used by default.")
+	writePath := sp.flagSet.StringP("output", "o", "", "The path and name for the output. Please do not add any file extension, as those will be added automatically.\nWill receive the extension .png for the QR code and .vcf for the vCard. The input file basename will be used by default.")
 
-	vCardVersion := pflag.StringP("version", "v", "3.0", "The vCard version to create.")
+	vCardVersion := sp.flagSet.StringP("version", "v", "3.0", "The vCard version to create.")
 
-	foregroundColor := pflag.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value (like \"#000\") or a CSS color name (like black).")
+	foregroundColor := sp.flagSet.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value (like \"#000\") or a CSS color name (like black).")
 
-	backgroundColor := pflag.StringP("background", "b", "transparent", "The background color of the QR code. This can be a hex RGB color value (like \"#fff\") or a CSS color name (like white).")
+	backgroundColor := sp.flagSet.StringP("background", "b", "transparent", "The background color of the QR code. This can be a hex RGB color value (like \"#fff\") or a CSS color name (like white).")
 
-	border := pflag.BoolP("border", "r", false, "Whether the QR code has a border or not.")
+	border := sp.flagSet.BoolP("border", "r", false, "Whether the QR code has a border or not.")
 
-	size := pflag.IntP("size", "z", 400, "The size of the resulting QR code in width and height of pixels.")
+	size := sp.flagSet.IntP("size", "z", 400, "The size of the resulting QR code in width and height of pixels.")
 
-	bom := pflag.BoolP("bom", "m", false, "List the Software Bill of Materials of this tool in CycloneDX format.")
+	bom := sp.flagSet.BoolP("bom", "m", false, "List the Software Bill of Materials of this tool in CycloneDX format.")
 
-	sp.formatFlagUsage() //adjust help format before parsing
-	pflag.Parse()        //process flags
+	sp.formatFlagUsage()          //adjust help format before parsing
+	sp.flagSet.Parse(os.Args[1:]) //process flags
 
 	settings := CLIFileSettings{}
 	settings.App = config.Settings{}
@@ -114,8 +117,8 @@ func (sp *SettingsProvider) Load() (CLIFileSettings, error) {
 }
 
 func (sp *SettingsProvider) formatFlagUsage() {
-	pflag.CommandLine.SortFlags = false
-	pflag.Usage = func() {
+	sp.flagSet.SortFlags = false
+	sp.flagSet.Usage = func() {
 		version, _ := sp.versionService.Version()
 
 		if version != "" {
@@ -128,7 +131,7 @@ func (sp *SettingsProvider) formatFlagUsage() {
 		sp.userNotifier.NotifyLoud("Usage: qrvc [flags]")
 		sp.userNotifier.Section()
 		sp.userNotifier.NotifyLoud("Flags:")
-		pflag.CommandLine.VisitAll(func(f *pflag.Flag) {
+		sp.flagSet.VisitAll(func(f *pflag.Flag) {
 			sp.userNotifier.Section()
 			if f.Shorthand != "" {
 				// prints: -h, --help (type)

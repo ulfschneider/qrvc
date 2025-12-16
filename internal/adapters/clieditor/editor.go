@@ -1,11 +1,11 @@
 package clieditor
 
 import (
-	"slices"
 	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/emersion/go-vcard"
+	qrcard "github.com/ulfschneider/qrvc/internal/domain"
 )
 
 type CardEditor struct {
@@ -33,12 +33,12 @@ func (e *CardEditor) Edit(card vcard.Card) error {
 }
 
 type qrCardFormData struct {
-	name         vcard.Name
+	name         *vcard.Name
 	gender       vcard.Sex
 	title        string
 	organization string
 	department   string
-	address      vcard.Address
+	address      *vcard.Address
 	email        string
 	url          string
 	cellPhone    string
@@ -54,7 +54,7 @@ func maybeGet(s []string, i int) string {
 	return ""
 }
 
-func transferVCardIntoFormData(card vcard.Card) *qrCardFormData {
+func transferVCardIntoFormData(card vcard.Card) qrCardFormData {
 
 	sex, _ := card.Gender()
 
@@ -63,37 +63,37 @@ func transferVCardIntoFormData(card vcard.Card) *qrCardFormData {
 	department := maybeGet(orgSplit, 1)
 
 	data := qrCardFormData{
-		name:         *card.Name(),
+		name:         card.Name(),
 		gender:       sex,
 		title:        card.Value(vcard.FieldTitle),
 		organization: organization,
 		department:   department,
-		address:      *card.Address(),
+		address:      card.Address(),
 		email:        card.Value(vcard.FieldEmail),
 		url:          card.Value(vcard.FieldURL),
-		cellPhone:    typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell),
-		workPhone:    typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork),
-		homePhone:    typedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome),
+		cellPhone:    qrcard.TypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell),
+		workPhone:    qrcard.TypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork),
+		homePhone:    qrcard.TypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome),
 		ready:        true,
 	}
 
-	return &data
+	return data
 }
 
-func transferFormDataIntoVCard(card vcard.Card, formData *qrCardFormData) {
-	card.SetName(&formData.name)
+func transferFormDataIntoVCard(card vcard.Card, formData qrCardFormData) {
+	card.SetName(formData.name)
 	card.SetGender(vcard.Sex(formData.gender), "")
 	card.SetValue(vcard.FieldTitle, formData.title)
 	card.SetValue(vcard.FieldOrganization, formData.organization+";"+formData.department)
-	card.SetAddress(&formData.address)
+	card.SetAddress(formData.address)
 	card.SetValue(vcard.FieldEmail, formData.email)
 	card.SetValue(vcard.FieldURL, formData.url)
-	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell, formData.cellPhone)
-	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork, formData.workPhone)
-	setTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome, formData.homePhone)
+	qrcard.SetTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeCell, formData.cellPhone)
+	qrcard.SetTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeWork, formData.workPhone)
+	qrcard.SetTypedVcardFieldValue(card, vcard.FieldTelephone, vcard.TypeHome, formData.homePhone)
 }
 
-func prepareForm(formData *qrCardFormData) *huh.Form {
+func prepareForm(formData qrCardFormData) *huh.Form {
 
 	vCardForm := huh.NewForm(
 		huh.NewGroup(
@@ -143,48 +143,4 @@ func prepareForm(formData *qrCardFormData) *huh.Form {
 		),
 	).WithTheme(huh.ThemeBase16())
 	return vCardForm
-}
-
-func typedVcardFieldValue(card vcard.Card, fieldName, wantType string) string {
-	if wantType == "" {
-		return card.Value(fieldName)
-	}
-
-	typedFields := card[fieldName]
-	if typedFields == nil {
-		return ""
-	}
-
-	for _, f := range typedFields {
-		if f.Params.HasType(wantType) {
-			return f.Value
-		}
-	}
-
-	return ""
-}
-
-func setTypedVcardFieldValue(card vcard.Card, fieldName, wantType, value string) {
-	// we didn´t get a type
-	if wantType == "" {
-		card.SetValue(fieldName, value)
-		return
-	}
-
-	// check if there is already a field of suitable type
-	typedFields := card[fieldName]
-	for _, f := range typedFields {
-		if slices.Contains(f.Params.Types(), wantType) {
-			f.Value = value
-			return
-		}
-	}
-
-	// no field of that type was found, add one
-	card.Add(fieldName, &vcard.Field{
-		Value: value,
-		Params: map[string][]string{
-			"TYPE": {wantType},
-		},
-	})
 }
