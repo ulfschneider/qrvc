@@ -43,9 +43,6 @@ build:
 	@ $(MAKE) update
 
 	@echo
-	@ $(MAKE) check
-
-	@echo
 	@ $(MAKE) bom
 
 	@echo
@@ -144,11 +141,12 @@ bom:
 	@cyclonedx-gomod app -json=true -licenses=true -output=$(BOM_FILE)
 
 
-## update: update all dependencies
+## update: update dependencies and then do a check
 .PHONY: update
 update:
 	@echo "Updating dependencies"
 	go get -u ./...
+	@ $(MAKE) check
 
 ## update-tools: update the tools that are required for building
 .PHONY: update-tools
