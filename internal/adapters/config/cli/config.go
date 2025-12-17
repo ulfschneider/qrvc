@@ -56,7 +56,7 @@ func (sp *SettingsProvider) Load() (CLIFileSettings, error) {
 
 	foregroundColor := sp.flagSet.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value (like \"#000\") or a CSS color name (like black).")
 
-	backgroundColor := sp.flagSet.StringP("background", "b", "transparent", "The background color of the QR code. This can be a hex RGB color value (like \"#fff\") or a CSS color name (like white).")
+	backgroundColor := sp.flagSet.StringP("background", "b", "white", "The background color of the QR code. This can be a hex RGB color value (like \"#fff\") or a CSS color name (like white, or transparent).")
 
 	border := sp.flagSet.BoolP("border", "r", false, "Whether the QR code has a border or not.")
 

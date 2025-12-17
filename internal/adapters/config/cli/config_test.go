@@ -37,7 +37,7 @@ func TestDefaultSettings(t *testing.T) {
 
 	assert.False(t, settings.App.Silent)
 
-	bgColor, err := csscolorparser.Parse("transparent")
+	bgColor, err := csscolorparser.Parse("white")
 	assert.NoError(t, err)
 	assert.Equal(t, bgColor, settings.App.QRSettings.BackgroundColor)
 
