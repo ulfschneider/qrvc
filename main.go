@@ -75,7 +75,7 @@ func finalize(settings configcli.CLIFileSettings, err error) {
 		//any other error
 		userNotifier.Notify(err)
 	}
-	if settings.CLI.Bom == false {
+	if settings.CLI.Bom == false && settings.CLI.AppVersion == false && settings.App.Silent == false {
 		//say good bye
 		userNotifier.Section()
 		userNotifier.Notify("👋")
