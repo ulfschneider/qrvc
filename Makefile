@@ -136,19 +136,28 @@ test:
 	@echo "Automated tests"
 	@go test ./...
 
+## gitinfo: prepare git last commit hash and commit time for embedding into the build
+.PHONY: gitinfo
+gitinfo:
+	@if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
+		printf "%s" "$$(git rev-parse --short HEAD)" > $(GIT_HASH_FILE); \
+		printf "%s" "$$(git show -s --format=%cI HEAD)" > $(GIT_TIMESTAMP_FILE); \
+	else \
+		: > $(GIT_HASH_FILE); \
+		: > $(GIT_TIMESTAMP_FILE); \
+	fi
+
 ## version: prepare version for embedding into the build
 .PHONY: version
-ifneq ($(strip $(VERSION)), )
+ifneq ($(strip $(VERSION)),)
 version:
 	@echo "Preparing version $(NORMALIZED_VERSION)"
 	@printf "%s" "$(NORMALIZED_VERSION)" > $(VERSION_FILE)
-	@printf "%s" "$$(git rev-parse --short HEAD)" > $(GIT_HASH_FILE)
-	@printf "%s" "$$(git show -s --format=%cI HEAD)" > $(GIT_TIMESTAMP_FILE)
+	@ $(MAKE) gitinfo
 else
 version:
 	@echo "No version information"
-	@printf "%s" "$$(git rev-parse --short HEAD)" > $(GIT_HASH_FILE)
-	@printf "%s" "$$(git show -s --format=%cI HEAD)" > $(GIT_TIMESTAMP_FILE)
+	@ $(MAKE) gitinfo
 endif
 
 ## bom: check and prepare licenses and bom for embedding them into the build
