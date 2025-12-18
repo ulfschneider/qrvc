@@ -2,7 +2,7 @@ package versionembedded
 
 import (
 	"embed"
-	"runtime/debug"
+	"strings"
 )
 
 type VersionProvider struct {
@@ -18,38 +18,34 @@ var generated embed.FS
 // version
 const versionPath = "generated/version.txt"
 
-func (vp *VersionProvider) Version() string {
-	f, err := generated.Open(versionPath)
+// commit hash
+const commitPath = "generated/commit.txt"
+
+// time path
+const timePath = "generated/time.txt"
+
+func readEmbeddedData(filePath string) string {
+	f, err := generated.Open(filePath)
 	if err != nil {
 		return ""
 	}
 	defer f.Close()
 
-	version, err := generated.ReadFile(versionPath)
+	data, err := generated.ReadFile(filePath)
 	if err != nil {
 		return ""
 	}
-	return string(version)
+	return strings.TrimSpace(string(data))
+}
+
+func (vp *VersionProvider) Version() string {
+	return readEmbeddedData(versionPath)
 }
 
 func (vp *VersionProvider) Commit() string {
-	if info, ok := debug.ReadBuildInfo(); ok {
-		for _, setting := range info.Settings {
-			if setting.Key == "vcs.revision" {
-				return setting.Value
-			}
-		}
-	}
-	return ""
+	return readEmbeddedData(commitPath)
 }
 
 func (vp *VersionProvider) Time() string {
-	if info, ok := debug.ReadBuildInfo(); ok {
-		for _, setting := range info.Settings {
-			if setting.Key == "vcs.time" {
-				return setting.Value
-			}
-		}
-	}
-	return ""
+	return readEmbeddedData(timePath)
 }

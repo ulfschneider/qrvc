@@ -21,6 +21,8 @@ LICENSES_FOLDER:= $(BOM_GENERATED_FOLDER)/licenses
 BOM_FILE  := $(BOM_GENERATED_FOLDER)/bom.json
 VERSION_GENERATED_FOLDER := internal/adapters/version/embedded/generated
 VERSION_FILE := $(VERSION_GENERATED_FOLDER)/version.txt
+GIT_HASH_FILE := $(VERSION_GENERATED_FOLDER)/commit.txt
+GIT_TIMESTAMP_FILE := $(VERSION_GENERATED_FOLDER)/time.txt
 
 # Strip leading v, then prepend exactly one v
 NORMALIZED_VERSION := v$(patsubst v%,%,$(VERSION))
@@ -140,9 +142,13 @@ ifneq ($(strip $(VERSION)), )
 version:
 	@echo "Preparing version $(NORMALIZED_VERSION)"
 	@printf "%s" "$(NORMALIZED_VERSION)" > $(VERSION_FILE)
+	@printf "%s" "$$(git rev-parse --short HEAD)" > $(GIT_HASH_FILE)
+	@printf "%s" "$$(git show -s --format=%cI HEAD)" > $(GIT_TIMESTAMP_FILE)
 else
 version:
 	@echo "No version information"
+	@printf "%s" "$$(git rev-parse --short HEAD)" > $(GIT_HASH_FILE)
+	@printf "%s" "$$(git show -s --format=%cI HEAD)" > $(GIT_TIMESTAMP_FILE)
 endif
 
 ## bom: check and prepare licenses and bom for embedding them into the build

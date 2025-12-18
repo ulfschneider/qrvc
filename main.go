@@ -58,9 +58,9 @@ func runVersion() {
 	notifier := notifiercli.NewUserNotifier()
 
 	if version != "" {
-		notifier.NotifyfLoud("%s %s %s", version, time, commit)
+		notifier.NotifyfLoud("%s", version)
 	} else if commit != "" {
-		notifier.NotifyfLoud("%s %", time, commit)
+		notifier.NotifyfLoud("%s %s", commit, time)
 	} else {
 		notifier.NotifyLoud("No version information available")
 	}
