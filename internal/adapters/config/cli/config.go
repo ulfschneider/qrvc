@@ -124,16 +124,9 @@ func (sp *SettingsProvider) formatFlagUsage() {
 	sp.flagSet.SortFlags = false
 	sp.flagSet.Usage = func() {
 		version := sp.versionService.Version()
-		commit := sp.versionService.Commit()
-		time := sp.versionService.Time()
 
 		if version != "" {
-			if commit != "" {
-				version = " " + commit
-			}
 			sp.userNotifier.NotifyfLoud("qrvc %s", version)
-		} else if commit != "" {
-			sp.userNotifier.NotifyfLoud("qrvc %s %s", commit, time)
 		} else {
 			sp.userNotifier.NotifyLoud("qrvc")
 		}

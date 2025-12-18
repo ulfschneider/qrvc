@@ -41,11 +41,3 @@ func readEmbeddedData(filePath string) string {
 func (vp *VersionProvider) Version() string {
 	return readEmbeddedData(versionPath)
 }
-
-func (vp *VersionProvider) Commit() string {
-	return readEmbeddedData(commitPath)
-}
-
-func (vp *VersionProvider) Time() string {
-	return readEmbeddedData(timePath)
-}

@@ -29,8 +29,6 @@ type VCardCodec interface {
 
 type VersionProvider interface {
 	Version() string
-	Commit() string
-	Time() string
 }
 
 type UserNotifier interface {

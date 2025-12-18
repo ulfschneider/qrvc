@@ -10,7 +10,7 @@ ALLOWED_LICENSES := MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0
 IGNORE_LICENSES := qrvc,golang.org
 
 # build targets
-PLATFORMS := windows linux darwin
+PLATFORMS := windows darwin
 ARCHS := amd64 arm64
 
 # Names for building
@@ -136,16 +136,6 @@ test:
 	@echo "Automated tests"
 	@go test ./...
 
-## gitinfo: prepare git last commit hash and commit time for embedding into the build
-.PHONY: gitinfo
-gitinfo:
-	@if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then \
-		printf "%s" "$$(git rev-parse --short HEAD)" > $(GIT_HASH_FILE); \
-		printf "%s" "$$(git show -s --format=%cI HEAD)" > $(GIT_TIMESTAMP_FILE); \
-	else \
-		: > $(GIT_HASH_FILE); \
-		: > $(GIT_TIMESTAMP_FILE); \
-	fi
 
 ## version: prepare version for embedding into the build
 .PHONY: version
@@ -153,11 +143,9 @@ ifneq ($(strip $(VERSION)),)
 version:
 	@echo "Preparing version $(NORMALIZED_VERSION)"
 	@printf "%s" "$(NORMALIZED_VERSION)" > $(VERSION_FILE)
-	@ $(MAKE) gitinfo
 else
 version:
 	@echo "No version information"
-	@ $(MAKE) gitinfo
 endif
 
 ## bom: check and prepare licenses and bom for embedding them into the build

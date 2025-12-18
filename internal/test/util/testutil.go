@@ -84,14 +84,6 @@ func (vp *testVersionProvider) Version() string {
 	return "TEST VERSION"
 }
 
-func (vp *testVersionProvider) Commit() string {
-	return "Commit"
-}
-
-func (vp *testVersionProvider) Time() string {
-	return "Time"
-}
-
 func LoadTestSettings() configcli.CLIFileSettings {
 	var versionService = services.NewVersionService(CreateVersionProvider())
 	var settingsProvider = configcli.NewSettingsProvider(versionService)

@@ -50,20 +50,11 @@ func runBOM() error {
 
 func runVersion() {
 	versionProvider := versionembedded.NewVersionProvider()
-	versionService := services.NewVersionService(&versionProvider)
-	version := versionService.Version()
-	commit := versionService.Commit()
-	time := versionService.Time()
-
+	version := versionProvider.Version()
 	notifier := notifiercli.NewUserNotifier()
 
 	if version != "" {
-		if commit != "" {
-			version = version + " " + commit
-		}
 		notifier.NotifyfLoud("%s", version)
-	} else if commit != "" {
-		notifier.NotifyfLoud("%s %s", commit, time)
 	} else {
 		notifier.NotifyLoud("No version information available")
 	}
