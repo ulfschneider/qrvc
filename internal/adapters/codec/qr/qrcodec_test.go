@@ -2,7 +2,6 @@ package qrcodec_test
 
 import (
 	"image"
-	"image/draw"
 	"testing"
 
 	"github.com/mazznoer/csscolorparser"
@@ -11,7 +10,7 @@ import (
 
 	qrcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/qr"
 	vcardcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/vcard"
-	testutil "github.com/ulfschneider/qrvc/internal/adapters/test/util"
+	testutil "github.com/ulfschneider/qrvc/internal/test/util"
 
 	"github.com/ulfschneider/qrvc/internal/application/config"
 )
@@ -31,7 +30,7 @@ func TestQRCodec(t *testing.T) {
 	qrCodec := qrcodec.NewCodec()
 	resultImg, _ := qrCodec.Encode(card, testSettings)
 
-	assert.Equal(t, toRGBA(expectedImg).Pix, toRGBA(resultImg).Pix)
+	assert.Equal(t, testutil.ToRGBA(expectedImg).Pix, testutil.ToRGBA(resultImg).Pix)
 }
 
 func makeQRCode(vcf []byte, settings config.QRCodeSettings) (image.Image, error) {
@@ -47,11 +46,4 @@ func makeQRCode(vcf []byte, settings config.QRCodeSettings) (image.Image, error)
 	img := q.Image(settings.Size)
 
 	return img, nil
-}
-
-func toRGBA(img image.Image) *image.RGBA {
-	b := img.Bounds()
-	rgba := image.NewRGBA(b)
-	draw.Draw(rgba, b, img, b.Min, draw.Src)
-	return rgba
 }

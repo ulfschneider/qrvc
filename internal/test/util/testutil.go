@@ -2,14 +2,16 @@ package testutil
 
 import (
 	"image"
+	"image/draw"
 	"strings"
 
 	"github.com/emersion/go-vcard"
 
 	qrcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/qr"
 	vcardcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/vcard"
+	configcli "github.com/ulfschneider/qrvc/internal/adapters/config/cli"
 	"github.com/ulfschneider/qrvc/internal/application/config"
-	"github.com/ulfschneider/qrvc/internal/application/ports"
+	"github.com/ulfschneider/qrvc/internal/application/services"
 	qrcard "github.com/ulfschneider/qrvc/internal/domain"
 )
 
@@ -74,10 +76,33 @@ func EncodeCard(card vcard.Card) []byte {
 
 type testVersionProvider struct{}
 
-func CreateVersionProvider() ports.VersionProvider {
+func CreateVersionProvider() *testVersionProvider {
 	return &testVersionProvider{}
 }
 
 func (vp *testVersionProvider) Version() (string, error) {
 	return "TEST VERSION", nil
+}
+
+func (vp *testVersionProvider) Commit() string {
+	return "Commit"
+}
+
+func (vp *testVersionProvider) Time() string {
+	return "Time"
+}
+
+func LoadTestSettings() configcli.CLIFileSettings {
+	var versionService = services.NewVersionService(CreateVersionProvider())
+	var settingsProvider = configcli.NewSettingsProvider(versionService)
+
+	settings, _ := settingsProvider.Load()
+	return settings
+}
+
+func ToRGBA(img image.Image) *image.RGBA {
+	b := img.Bounds()
+	rgba := image.NewRGBA(b)
+	draw.Draw(rgba, b, img, b.Min, draw.Src)
+	return rgba
 }

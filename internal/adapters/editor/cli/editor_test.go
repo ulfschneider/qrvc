@@ -6,8 +6,8 @@ import (
 	"github.com/emersion/go-vcard"
 	"github.com/stretchr/testify/assert"
 
-	testutil "github.com/ulfschneider/qrvc/internal/adapters/test/util"
 	qrcard "github.com/ulfschneider/qrvc/internal/domain"
+	testutil "github.com/ulfschneider/qrvc/internal/test/util"
 )
 
 func TestEditor(t *testing.T) {

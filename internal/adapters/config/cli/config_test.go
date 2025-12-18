@@ -7,7 +7,7 @@ import (
 	"github.com/skip2/go-qrcode"
 	"github.com/stretchr/testify/assert"
 	configcli "github.com/ulfschneider/qrvc/internal/adapters/config/cli"
-	testutil "github.com/ulfschneider/qrvc/internal/adapters/test/util"
+	testutil "github.com/ulfschneider/qrvc/internal/test/util"
 
 	"github.com/ulfschneider/qrvc/internal/application/services"
 )

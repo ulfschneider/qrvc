@@ -12,19 +12,8 @@ import (
 	vcardcodec "github.com/ulfschneider/qrvc/internal/adapters/codec/vcard"
 	configcli "github.com/ulfschneider/qrvc/internal/adapters/config/cli"
 	repofile "github.com/ulfschneider/qrvc/internal/adapters/repo/file"
-	testutil "github.com/ulfschneider/qrvc/internal/adapters/test/util"
-
-	"github.com/ulfschneider/qrvc/internal/application/services"
+	testutil "github.com/ulfschneider/qrvc/internal/test/util"
 )
-
-func createTestSettings() configcli.CLIFileSettings {
-
-	versionService := services.NewVersionService(testutil.CreateVersionProvider())
-	settingsProvider := configcli.NewSettingsProvider(versionService)
-	settings, _ := settingsProvider.Load()
-
-	return settings
-}
 
 func createTestRepo(fs afero.Fs, settings configcli.CLIFileSettings) repofile.Repository {
 	cardCodec := vcardcodec.NewCodec()
@@ -35,7 +24,7 @@ func createTestRepo(fs afero.Fs, settings configcli.CLIFileSettings) repofile.Re
 
 func TestMakeVCardInstanceFromNonExistingFile(t *testing.T) {
 	filesystem := afero.NewMemMapFs()
-	settings := createTestSettings()
+	settings := testutil.LoadTestSettings()
 	settings.Files.ReadVCardPath = "vcard"
 	repo := createTestRepo(filesystem, settings)
 
@@ -51,7 +40,7 @@ func TestMakeVCardInstanceFromNonExistingFile(t *testing.T) {
 
 func TestMakeVCardInstanceFromExistingFile(t *testing.T) {
 	filesystem := afero.NewMemMapFs()
-	settings := createTestSettings()
+	settings := testutil.LoadTestSettings()
 	filePath := "vcard.vcf"
 	settings.Files.ReadVCardPath = filePath
 	repo := createTestRepo(filesystem, settings)
@@ -87,7 +76,7 @@ func TestMakeVCardInstanceFromExistingFile(t *testing.T) {
 
 func TestWriteVCard(t *testing.T) {
 	filesystem := afero.NewMemMapFs()
-	settings := createTestSettings()
+	settings := testutil.LoadTestSettings()
 	settings.Files.ReadVCardPath = "vcard.vcf"
 	settings.Files.WriteVCardPath = "vcard.vcf"
 	settings.Files.WriteQRCodePath = "vcard.png"
