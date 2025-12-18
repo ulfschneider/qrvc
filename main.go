@@ -48,6 +48,24 @@ func runBOM() error {
 	return err
 }
 
+func runVersion() {
+	versionProvider := versionembedded.NewVersionProvider()
+	versionService := services.NewVersionService(&versionProvider)
+	version := versionService.Version()
+	commit := versionService.Commit()
+	time := versionService.Time()
+
+	notifier := notifiercli.NewUserNotifier()
+
+	if version != "" {
+		notifier.NotifyfLoud("%s %s %s", version, time, commit)
+	} else if commit != "" {
+		notifier.NotifyfLoud("%s %", time, commit)
+	} else {
+		notifier.NotifyLoud("No version information available")
+	}
+}
+
 func finalize(settings configcli.CLIFileSettings, err error) {
 	userNotifier := notifiercli.NewUserNotifier()
 	if errors.Is(err, huh.ErrUserAborted) {
@@ -88,14 +106,16 @@ func main() {
 		finalize(settings, err)
 	}()
 
-	if !settings.CLI.Bom {
+	if !settings.CLI.Bom && !settings.CLI.AppVersion {
 		userNotifier := notifiercli.NewUserNotifier()
 		userNotifier.Notify("You are running qrvc, a tool to prepare a QR code from a vCard.")
 		userNotifier.Notifyf("Get a list of options by starting the program in the form: %s", "qrvc -h")
 		userNotifier.Notifyf("Stop the program by pressing %s", "CTRL-C")
 		userNotifier.Section()
 		err = runQRCard(settings)
-	} else {
+	} else if settings.CLI.Bom {
 		err = runBOM()
+	} else if settings.CLI.AppVersion {
+		runVersion()
 	}
 }

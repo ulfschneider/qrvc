@@ -35,7 +35,8 @@ type FileSettings struct {
 }
 
 type CLISettings struct {
-	Bom bool
+	Bom        bool
+	AppVersion bool
 }
 
 func NewSettingsProvider(versionService services.VersionService) SettingsProvider {
@@ -52,7 +53,7 @@ func (sp *SettingsProvider) Load() (CLIFileSettings, error) {
 
 	writePath := sp.flagSet.StringP("output", "o", "", "The path and name for the output. Please do not add any file extension, as those will be added automatically.\nWill receive the extension .png for the QR code and .vcf for the vCard. The input file basename will be used by default.")
 
-	vCardVersion := sp.flagSet.StringP("version", "v", "3.0", "The vCard version to create.")
+	vCardVersion := sp.flagSet.StringP("cardversion", "c", "3.0", "The vCard version to create.")
 
 	foregroundColor := sp.flagSet.StringP("foreground", "f", "black", "The foreground color of the QR code. This can be a hex RGB color value (like \"#000\") or a CSS color name (like black).")
 
@@ -63,6 +64,8 @@ func (sp *SettingsProvider) Load() (CLIFileSettings, error) {
 	size := sp.flagSet.IntP("size", "z", 400, "The size of the resulting QR code in width and height of pixels.")
 
 	bom := sp.flagSet.BoolP("bom", "m", false, "List the Software Bill of Materials of this tool in CycloneDX format.")
+
+	appVersion := sp.flagSet.BoolP("version", "v", false, "Show the qrvc version.")
 
 	sp.formatFlagUsage()          //adjust help format before parsing
 	sp.flagSet.Parse(os.Args[1:]) //process flags
@@ -112,6 +115,7 @@ func (sp *SettingsProvider) Load() (CLIFileSettings, error) {
 	settings.App.QRSettings.RecoveryLevel = qrcode.Low
 
 	settings.CLI.Bom = *bom
+	settings.CLI.AppVersion = *appVersion
 
 	return settings, nil
 }
@@ -119,10 +123,11 @@ func (sp *SettingsProvider) Load() (CLIFileSettings, error) {
 func (sp *SettingsProvider) formatFlagUsage() {
 	sp.flagSet.SortFlags = false
 	sp.flagSet.Usage = func() {
-		version, _ := sp.versionService.Version()
+		version := sp.versionService.Version()
+		time := sp.versionService.Time()
 
 		if version != "" {
-			sp.userNotifier.NotifyfLoud("qrvc %s\n", version)
+			sp.userNotifier.NotifyfLoud("qrvc %s %s\n", version, time)
 		} else {
 			sp.userNotifier.NotifyLoud("qrvc")
 		}

@@ -12,6 +12,14 @@ func NewVersionService(versionProvider ports.VersionProvider) VersionService {
 	return VersionService{versionProvider: versionProvider}
 }
 
-func (vs *VersionService) Version() (string, error) {
+func (vs *VersionService) Version() string {
 	return vs.versionProvider.Version()
+}
+
+func (vs *VersionService) Commit() string {
+	return vs.versionProvider.Commit()
+}
+
+func (vs *VersionService) Time() string {
+	return vs.versionProvider.Time()
 }

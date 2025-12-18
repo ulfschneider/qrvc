@@ -80,8 +80,8 @@ func CreateVersionProvider() *testVersionProvider {
 	return &testVersionProvider{}
 }
 
-func (vp *testVersionProvider) Version() (string, error) {
-	return "TEST VERSION", nil
+func (vp *testVersionProvider) Version() string {
+	return "TEST VERSION"
 }
 
 func (vp *testVersionProvider) Commit() string {

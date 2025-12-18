@@ -43,6 +43,9 @@ build:
 	@ $(MAKE) update
 
 	@echo
+	@ $(MAKE) version
+
+	@echo
 	@ $(MAKE) bom
 
 	@echo
@@ -93,7 +96,8 @@ release:
 	@echo "Creating temporary release branch $(RELEASE_BRANCH)"
 	git checkout -b $(RELEASE_BRANCH)
 
-	@printf "%s" "$(NORMALIZED_VERSION)" > $(VERSION_FILE)
+	@echo
+	@ $(MAKE) version
 
 	@echo
 	@ $(MAKE) bom
@@ -123,11 +127,23 @@ release:
 	@echo
 	@echo "👋 Release $(NORMALIZED_VERSION) complete."
 
+
 ## test: run all the automated tests
-.PHONY: Test
+.PHONY: test
 test:
 	@echo "Automated tests"
 	@go test ./...
+
+## version: prepare version for embedding into the build
+.PHONY: version
+ifneq ($(strip $(VERSION)), )
+version:
+	@echo "Preparing version $(NORMALIZED_VERSION)"
+	@printf "%s" "$(NORMALIZED_VERSION)" > $(VERSION_FILE)
+else
+version:
+	@echo "No version information"
+endif
 
 ## bom: check and prepare licenses and bom for embedding them into the build
 .PHONY: bom
