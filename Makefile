@@ -32,7 +32,8 @@ build:
 	set -a; \
 	. ./.env; \
 	set +a; \
-	HOMEBREW_REPO=$(BREW_REPO)	goreleaser release --clean
+	export HOMEBREW_REPO="$(BREW_REPO)"; \
+	goreleaser release --clean
 
 
 .PHONY: verify-main
