@@ -7,11 +7,36 @@
 
 qrvc is command line tool to prepare a QR code from a vCard.
 
-## Install
+## Install with Homebrew on Mac and Linux
+
+```sh
+brew tap ulschneider/tap
+brew install qrvc
+```
+
+## Install with Go on any machine that has Go on board
 
 ```sh
 go install github.com/ulfschneider/qrvc@latest
 ```
+
+## Manual install
+
+You can also download the appropriate binary directly from GitHub Releases:
+
+Visit [github.com/ulfschneider/qrvc/releases](https://github.com/ulfschneider/qrvc/releases)
+
+   1.	Download the archive matching your OS and architecture
+	2.	Extract it
+	3.	Move the binary to a directory included in your PATH (for example /usr/local/bin)
+
+## Verify the installation
+
+```sh
+qrvc --version
+```
+
+This command should print out the qrvc version you are using.
 
 ## Usage
 
@@ -19,20 +44,6 @@ After installation, start the tool with the `-h` flag to get information about h
 
 ```sh
 qrvc -h
-```
-
-## Build
-
-The project contains a Makefile which allows you to build the tool yourself:
-
-```sh
-make build
-```
-
-To get a list of all available make targets, call:
-
-```sh
-make
 ```
 
 ## Issues

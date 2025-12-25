@@ -27,8 +27,16 @@ help:
 build:
 	@echo "Building qrvc $(NORMALIZED_VERSION)"
 
+	@if [ ! -f ./.env ]; then \
+			echo "ERROR: .env not found"; exit 1; \
+		fi
+		@set -a; \
+		. ./.env; \
+		set +a; \
+
 	@echo
 	goreleaser release --clean --brew-repo $(BREW_REPO)
+
 
 .PHONY: verify-main
 verify-main:
