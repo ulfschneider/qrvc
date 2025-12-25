@@ -3,19 +3,12 @@ GOPATH := $(shell go env GOPATH)
 GOBINPATH := $(GOPATH)/bin
 
 # Tools used during build
-TOOLS :=	github.com/google/go-licenses golang.org/x/vuln/cmd/govulncheck github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod github.com/fzipp/gocyclo/cmd/gocyclo github.com/gordonklaus/ineffassign github.com/client9/misspell/cmd/misspell
+TOOLS :=	github.com/google/go-licenses golang.org/x/vuln/cmd/govulncheck github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod github.com/fzipp/gocyclo/cmd/gocyclo github.com/gordonklaus/ineffassign github.com/client9/misspell/cmd/misspell github.com/goreleaser/goreleaser/v2
 
 # License handling
 ALLOWED_LICENSES := MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0
 IGNORE_LICENSES := qrvc,golang.org
 
-# build targets
-PLATFORMS := windows darwin
-ARCHS := amd64 arm64
-
-# Names for building
-BINARY_NAME := qrvc
-DIST_FOLDER := dist
 BOM_GENERATED_FOLDER := internal/adapters/bom/embedded/generated
 LICENSES_FOLDER:= $(BOM_GENERATED_FOLDER)/licenses
 BOM_FILE  := $(BOM_GENERATED_FOLDER)/bom.json
@@ -28,7 +21,7 @@ GIT_TIMESTAMP_FILE := $(VERSION_GENERATED_FOLDER)/time.txt
 NORMALIZED_VERSION := v$(patsubst v%,%,$(VERSION))
 
 # Name the temporyry release branch
-RELEASE_BRANCH := release-tmp-$(NORMALIZED_VERSION)
+MAIN_BRANCH := main
 
 ## help: show a list of available make commands
 .PHONY: help
@@ -36,57 +29,33 @@ help:
 	@echo "Usage:"
 	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' | sed -e 's/^/ /'
 
-## build: build the application for all targets. To build for a release, do not forget the set the version.
+## build: build the application for all targets. This requires a successful run of make release upfront.
 .PHONY: build
 build:
 	@echo "Building qrvc"
 
-	@echo
-	@ $(MAKE) update
+	goreleaser release --snapshot --clean
 
-	@echo
-	@ $(MAKE) version
-
-	@echo
-	@ $(MAKE) bom
-
-	@echo
-	@ $(MAKE) test
-
-	@rm -rf $(DIST)
-
-	@ for platform in $(PLATFORMS); do \
-	    for arch in $(ARCHS); do \
-			if [ "$$platform" = "windows" ]; then \
-           target=$(DIST_FOLDER)/$$platform/$$arch/$(BINARY_NAME).exe; \
-         else \
-           target=$(DIST_FOLDER)/$$platform/$$arch/$(BINARY_NAME); \
-         fi; \
-			mkdir -p $(DIST_FOLDER)/$$platform/$$arch; \
-			echo; \
-			echo "Building $$target"; \
-			GOOS=$$platform GOARCH=$$arch go build -o $$target . ; \
-		 done; \
-	done
-
-	@#if the environment variable AT_HOME is defined in the .env file and it is not empty, execute the code
-	@ . ./.env; \
-	if [ -n "$$AT_HOME" ]; then \
-	   echo;\
-      echo "I´m at home, therefore copying $(DIST_FOLDER)/darwin/arm64/qrvc to $(GOBINPATH)"; \
-      cp "$(DIST_FOLDER)/darwin/arm64/qrvc" $(GOBINPATH); \
-   fi
-
-	@ echo "👋 Binaries are built"
+	## verify-main: verify
+.PHONY: verify-main
+verify-main:
+	@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "$(MAIN_BRANCH)" ]; then \
+		echo "Error: you are not on branch $(MAIN_BRANCH)!"; \
+		exit 1; \
+	fi
+	@echo "On branch $(MAIN_BRANCH) ✅"
 
 ## release: tag the current state as a release in Git
 .PHONY: release
 release:
+	@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "$(MAIN_BRANCH)" ]; then \
+		echo "Error: you are not on branch $(MAIN_BRANCH)!"; \
+		exit 1; \
+	fi
+
 	@if [ -z "$(VERSION)" ]; then \
 		echo "ERROR: You must pass VERSION=x.y.z to make a release."; exit 1; \
 	fi
-
-	@ $(MAKE) check
 
 	@if [ -n "$$(git status --porcelain)" ]; then \
 		echo "ERROR: Working tree is not clean. Commit or stash changes first."; \
@@ -95,36 +64,30 @@ release:
 	fi
 
 	@echo
-	@echo "Creating temporary release branch $(RELEASE_BRANCH)"
-	git checkout -b $(RELEASE_BRANCH)
-
-	@echo
 	@ $(MAKE) version
 
 	@echo
 	@ $(MAKE) bom
 
 	@echo
+	@ $(MAKE) check
+
+	@echo
 	@ $(MAKE) test
 
 	@echo
-	@echo "Adding generated content to release branch"
-	git add --force $(BOM_GENERATED_FOLDER)
-	git add --force $(VERSION_GENERATED_FOLDER)
-	git commit -m "Add BOM and version for release $(NORMALIZED_VERSION)"
+	@echo "Adding generated content to Git"
+	git add $(BOM_GENERATED_FOLDER)
+	git add $(VERSION_GENERATED_FOLDER)
+	#git commit -m "Add BOM and version for release $(NORMALIZED_VERSION)"
 
 	@echo
 	@echo "Creating or updating tag $(NORMALIZED_VERSION)"
-	git tag --force $(NORMALIZED_VERSION)
+	#git tag $(NORMALIZED_VERSION)
 
 	@echo
 	@echo "Pushing release tag"
-	git push --force origin $(NORMALIZED_VERSION)
-
-	@echo
-	@echo "Cleaning up temporary branch"
-	git checkout -
-	git branch --delete --force $(RELEASE_BRANCH)
+	#git push origin
 
 	@echo
 	@echo "👋 Release $(NORMALIZED_VERSION) complete."

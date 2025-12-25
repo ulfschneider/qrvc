@@ -3,6 +3,4 @@
 smoketest*
 .env
 dist
-**/generated/**
-!**/generated/.gitkeep
 .DS_Store
