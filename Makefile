@@ -15,7 +15,7 @@ VERSION_FILE := $(VERSION_GENERATED_FOLDER)/version.txt
 NORMALIZED_VERSION := v$(patsubst v%,%,$(VERSION))
 
 MAIN_BRANCH := main
-BREW_REPO := https://github.com/ulfschneider/homebrew-tap
+BREW_REPO := ulfschneider/homebrew-tap
 
 ## help: show a list of available make commands
 .PHONY: help
@@ -35,7 +35,7 @@ build:
 		set +a; \
 
 	@echo
-	goreleaser release --clean --brew-repo $(BREW_REPO)
+	HOMEBREW_REPO=$(BREW_REPO)	goreleaser release --clean
 
 
 .PHONY: verify-main
