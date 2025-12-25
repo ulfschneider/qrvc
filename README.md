@@ -10,7 +10,7 @@ qrvc is command line tool to prepare a QR code from a vCard.
 ## Install with Homebrew on Mac and Linux
 
 ```sh
-brew tap ulschneider/tap
+brew tap ulfschneider/tap
 brew install qrvc
 ```
 
