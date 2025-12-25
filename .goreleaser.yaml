@@ -41,7 +41,7 @@ archives:
 brews:
   - name: qrvc
     repository:
-      owner: ulschneider
+      owner: ulfschneider
       name: homebrew-tap
     homepage: "https://github.com/ulfschneider/qrvc"
     description: "Use the command line to make a QR code from a vCard"
