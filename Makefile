@@ -28,7 +28,7 @@ build:
 	@echo "Building qrvc $(NORMALIZED_VERSION)"
 
 	@echo
-	goreleaser release --snapshot --clean --brew-repo $(BREW_REPO)
+	goreleaser release --clean --brew-repo $(BREW_REPO)
 
 .PHONY: verify-main
 verify-main:
@@ -75,7 +75,7 @@ release:
 
 	@echo
 	@echo "Pushing release"
-	#git push origin
+	git push origin
 
 	@echo
 	$(MAKE) build
