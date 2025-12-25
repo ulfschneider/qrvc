@@ -38,6 +38,16 @@ archives:
       - goos: windows
         formats: [zip]
 
+brews:
+  - name: qrvc                     # The CLI binary name
+    homepage: "https://github.com/ulfschneider/qrvc"
+    description: "Use the command line to make a QR code from a vCard"
+    license: "MIT"
+    install: |
+      bin.install "qrvc"
+    test: |
+      system "#{bin}/qrvc", "--version"
+
 changelog:
   sort: asc
   filters:

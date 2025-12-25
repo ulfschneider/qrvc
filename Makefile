@@ -1,7 +1,3 @@
-# go path
-GOPATH := $(shell go env GOPATH)
-GOBINPATH := $(GOPATH)/bin
-
 # Tools used during build
 TOOLS :=	github.com/google/go-licenses golang.org/x/vuln/cmd/govulncheck github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod github.com/fzipp/gocyclo/cmd/gocyclo github.com/gordonklaus/ineffassign github.com/client9/misspell/cmd/misspell github.com/goreleaser/goreleaser/v2
 
@@ -14,14 +10,12 @@ LICENSES_FOLDER:= $(BOM_GENERATED_FOLDER)/licenses
 BOM_FILE  := $(BOM_GENERATED_FOLDER)/bom.json
 VERSION_GENERATED_FOLDER := internal/adapters/version/embedded/generated
 VERSION_FILE := $(VERSION_GENERATED_FOLDER)/version.txt
-GIT_HASH_FILE := $(VERSION_GENERATED_FOLDER)/commit.txt
-GIT_TIMESTAMP_FILE := $(VERSION_GENERATED_FOLDER)/time.txt
 
 # Strip leading v, then prepend exactly one v
 NORMALIZED_VERSION := v$(patsubst v%,%,$(VERSION))
 
-# Name the temporyry release branch
 MAIN_BRANCH := main
+BREW_REPO := https://github.com/ulfschneider/homebrew-tap
 
 ## help: show a list of available make commands
 .PHONY: help
@@ -29,33 +23,31 @@ help:
 	@echo "Usage:"
 	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' | sed -e 's/^/ /'
 
-## build: build the application for all targets. This requires a successful run of make release upfront.
 .PHONY: build
 build:
-	@echo "Building qrvc"
+	@echo "Building qrvc $(NORMALIZED_VERSION)"
 
-	goreleaser release --snapshot --clean
+	@echo
+	goreleaser release --snapshot --clean --brew-repo $(BREW_REPO)
 
-	## verify-main: verify
 .PHONY: verify-main
 verify-main:
 	@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "$(MAIN_BRANCH)" ]; then \
 		echo "Error: you are not on branch $(MAIN_BRANCH)!"; \
 		exit 1; \
 	fi
-	@echo "On branch $(MAIN_BRANCH) ✅"
 
-## release: tag the current state as a release in Git
+## release: tag the current state as a release in Git and distribute the binaries
 .PHONY: release
 release:
-	#@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "$(MAIN_BRANCH)" ]; then \
-	#	echo "Error: you are not on branch $(MAIN_BRANCH)!"; \
-	#	exit 1; \
-	#fi
+	$(MAKE) verify-main
 
 	@if [ -z "$(VERSION)" ]; then \
 		echo "ERROR: You must pass VERSION=x.y.z to make a release."; exit 1; \
 	fi
+
+	@echo
+	@ $(MAKE) update
 
 	@if [ -n "$$(git status --porcelain)" ]; then \
 		echo "ERROR: Working tree is not clean. Commit or stash changes first."; \
@@ -70,27 +62,23 @@ release:
 	@ $(MAKE) bom
 
 	@echo
-	@ $(MAKE) check
-
-	@echo
 	@ $(MAKE) test
 
 	@echo
 	@echo "Adding generated content to Git"
-	git add $(BOM_GENERATED_FOLDER)
-	git add $(VERSION_GENERATED_FOLDER)
-	#git commit -m "Add BOM and version for release $(NORMALIZED_VERSION)"
+	git add .
+	git commit -m "Add version $(NORMALIZED_VERSION) and BOM for release"
 
 	@echo
-	@echo "Creating or updating tag $(NORMALIZED_VERSION)"
-	#git tag $(NORMALIZED_VERSION)
+	@echo "Creating tag $(NORMALIZED_VERSION)"
+	git tag $(NORMALIZED_VERSION)
 
 	@echo
-	@echo "Pushing release tag"
+	@echo "Pushing release"
 	#git push origin
 
 	@echo
-	@echo "👋 Release $(NORMALIZED_VERSION) complete."
+	$(MAKE) build
 
 
 ## test: run all the automated tests
@@ -111,6 +99,7 @@ version:
 	@echo "No version information"
 endif
 
+
 ## bom: check and prepare licenses and bom for embedding them into the build
 .PHONY: bom
 bom:
@@ -130,6 +119,7 @@ update:
 	go get -u ./...
 	@ $(MAKE) check
 
+
 ## update-tools: update the tools that are required for building
 .PHONY: update-tools
 update-tools:
@@ -138,6 +128,7 @@ update-tools:
 		echo "Updating $$t..."; \
 		go install "$$t@latest"; \
 	done
+
 
 ## check: tidy up the go.mod file and check dependencies and code
 .PHONY: check

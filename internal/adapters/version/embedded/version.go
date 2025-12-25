@@ -18,12 +18,6 @@ var generated embed.FS
 // version
 const versionPath = "generated/version.txt"
 
-// commit hash
-const commitPath = "generated/commit.txt"
-
-// time path
-const timePath = "generated/time.txt"
-
 func readEmbeddedData(filePath string) string {
 	f, err := generated.Open(filePath)
 	if err != nil {
