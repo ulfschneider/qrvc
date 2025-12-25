@@ -32,7 +32,6 @@ build:
 	set -a; \
 	. ./.env; \
 	set +a; \
-	export HOMEBREW_REPO="$(BREW_REPO)"; \
 	goreleaser release --clean
 
 
