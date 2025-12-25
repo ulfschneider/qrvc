@@ -25,16 +25,13 @@ help:
 
 .PHONY: build
 build:
-	@echo "Building qrvc $(NORMALIZED_VERSION)"
-
-	@if [ ! -f ./.env ]; then \
+	@echo "Building qrvc $(NORMALIZED_VERSION)"; \
+	if [ ! -f ./.env ]; then \
 			echo "ERROR: .env not found"; exit 1; \
-	fi
-	@set -a; \
+	fi; \
+	set -a; \
 	. ./.env; \
 	set +a; \
-
-	@echo
 	HOMEBREW_REPO=$(BREW_REPO)	goreleaser release --clean
 
 
