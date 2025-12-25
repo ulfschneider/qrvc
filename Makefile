@@ -29,10 +29,10 @@ build:
 
 	@if [ ! -f ./.env ]; then \
 			echo "ERROR: .env not found"; exit 1; \
-		fi
-		@set -a; \
-		. ./.env; \
-		set +a; \
+	fi
+	@set -a; \
+	. ./.env; \
+	set +a; \
 
 	@echo
 	HOMEBREW_REPO=$(BREW_REPO)	goreleaser release --clean
