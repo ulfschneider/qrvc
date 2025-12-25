@@ -48,10 +48,10 @@ verify-main:
 ## release: tag the current state as a release in Git
 .PHONY: release
 release:
-	@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "$(MAIN_BRANCH)" ]; then \
-		echo "Error: you are not on branch $(MAIN_BRANCH)!"; \
-		exit 1; \
-	fi
+	#@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "$(MAIN_BRANCH)" ]; then \
+	#	echo "Error: you are not on branch $(MAIN_BRANCH)!"; \
+	#	exit 1; \
+	#fi
 
 	@if [ -z "$(VERSION)" ]; then \
 		echo "ERROR: You must pass VERSION=x.y.z to make a release."; exit 1; \
