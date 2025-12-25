@@ -26,9 +26,9 @@ You can also download the appropriate binary directly from GitHub Releases:
 
 Visit [github.com/ulfschneider/qrvc/releases](https://github.com/ulfschneider/qrvc/releases)
 
-   1.	Download the archive matching your OS and architecture
-	2.	Extract it
-	3.	Move the binary to a directory included in your PATH (for example /usr/local/bin)
+1.	Download the archive matching your OS and architecture
+2.	Extract it
+3.	Move the binary to a directory included in your PATH (for example /usr/local/bin)
 
 ## Verify the installation
 
