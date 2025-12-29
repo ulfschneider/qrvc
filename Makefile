@@ -23,8 +23,9 @@ help:
 	@echo "Usage:"
 	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' | sed -e 's/^/ /'
 
-.PHONY: build
-build:
+
+.PHONY: build-and-distribute
+build-and-distribute:
 	@echo "Building qrvc $(NORMALIZED_VERSION)"; \
 	if [ ! -f ./.env ]; then \
 			echo "ERROR: .env not found"; exit 1; \
@@ -42,6 +43,19 @@ verify-main:
 		exit 1; \
 	fi
 
+## build: builds and archives the binaries, but does not distribute them
+.PHONY: build
+build:
+		@echo "Building qrvc $(NORMALIZED_VERSION)"; \
+		if [ ! -f ./.env ]; then \
+				echo "ERROR: .env not found"; exit 1; \
+		fi; \
+		set -a; \
+		. ./.env; \
+		set +a; \
+		goreleaser build --clean --snapshot
+
+
 ## release: tag the current state as a release in Git and distribute the binaries
 .PHONY: release
 release:
@@ -51,14 +65,14 @@ release:
 		echo "ERROR: You must pass VERSION=x.y.z to make a release."; exit 1; \
 	fi
 
-	@echo
-	@ $(MAKE) update
-
 	@if [ -n "$$(git status --porcelain)" ]; then \
 		echo "ERROR: Working tree is not clean. Commit or stash changes first."; \
 		git status --porcelain; \
 		exit 1; \
 	fi
+
+	@echo
+	@ $(MAKE) check
 
 	@echo
 	@ $(MAKE) version
@@ -83,7 +97,7 @@ release:
 	git push origin
 
 	@echo
-	$(MAKE) build
+	$(MAKE) build-and-distribute
 
 
 ## test: run all the automated tests
@@ -117,12 +131,12 @@ bom:
 	@cyclonedx-gomod app -json=true -licenses=true -output=$(BOM_FILE)
 
 
-## update: update dependencies and then do a check
+## update: update dependencies and tools
 .PHONY: update
 update:
 	@echo "Updating dependencies"
 	go get -u ./...
-	@ $(MAKE) check
+	@ $(MAKE) update-tools
 
 
 ## update-tools: update the tools that are required for building
@@ -138,8 +152,6 @@ update-tools:
 ## check: tidy up the go.mod file and check dependencies and code
 .PHONY: check
 check:
-	@ $(MAKE) update-tools
-	@echo
 	@echo "Tidying up the mod file, format code, check code quality, and check dependencies for vulnerabilities"
 	go mod tidy
 	go mod verify
