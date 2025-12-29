@@ -24,25 +24,6 @@ help:
 	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' | sed -e 's/^/ /'
 
 
-.PHONY: build-and-distribute
-build-and-distribute:
-	@echo "Building qrvc $(NORMALIZED_VERSION)"; \
-	if [ ! -f ./.env ]; then \
-			echo "ERROR: .env not found"; exit 1; \
-	fi; \
-	set -a; \
-	. ./.env; \
-	set +a; \
-	goreleaser release --clean
-
-
-.PHONY: verify-main
-verify-main:
-	@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "$(MAIN_BRANCH)" ]; then \
-		echo "Error: you are not on branch $(MAIN_BRANCH)!"; \
-		exit 1; \
-	fi
-
 ## build: builds and archives the binaries, but does not distribute them
 .PHONY: build
 build:
@@ -56,7 +37,7 @@ build:
 		goreleaser build --clean --snapshot
 
 
-## release: tag the current state as a release in Git and distribute the binaries
+## release: tag the current state as a release in Git and build and distribute the binaries
 .PHONY: release
 release:
 	$(MAKE) verify-main
@@ -161,3 +142,25 @@ check:
 	ineffassign ./...
 	misspell -error ./...
 	govulncheck ./...
+
+
+
+
+.PHONY: build-and-distribute
+build-and-distribute:
+	@echo "Building qrvc $(NORMALIZED_VERSION)"; \
+	if [ ! -f ./.env ]; then \
+			echo "ERROR: .env not found"; exit 1; \
+	fi; \
+	set -a; \
+	. ./.env; \
+	set +a; \
+	goreleaser release --clean
+
+
+.PHONY: verify-main
+verify-main:
+	@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "$(MAIN_BRANCH)" ]; then \
+		echo "Error: you are not on branch $(MAIN_BRANCH)!"; \
+		exit 1; \
+	fi
