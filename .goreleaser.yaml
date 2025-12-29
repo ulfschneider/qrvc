@@ -10,10 +10,6 @@ version: 2
 
 project_name: qrvc
 
-release:
-  github:
-    owner: ulfschneider
-    name: qrvc
 
 builds:
   - env:
@@ -22,6 +18,13 @@ builds:
       - linux
       - windows
       - darwin
+
+release:
+   extra_files:
+      - glob: dist/qrvc_Windows_*.exe
+   github:
+      owner: ulfschneider
+      name: qrvc
 
 archives:
   - formats: [tar.gz]
@@ -50,6 +53,38 @@ brews:
       bin.install "qrvc"
     test: |
       system "#{bin}/qrvc", "--version"
+
+winget:
+  - name: qrvc
+    # Required: publisher name as it will appear in the manifest
+    publisher: "Ulf Schneider"
+    # A short description of the app (required)
+    short_description: "Use the command line to make a QR code from a vCard"
+    # License name (required)
+    license: "MIT"
+    # Homepage for the project
+    homepage: "https://github.com/ulfschneider/qrvc"
+    # Optional support or issue URL
+    publisher_support_url: "https://github.com/ulfschneider/qrvc/issues"
+    # Tags for the manifest
+    tags:
+      - cli
+      - qr
+      - go
+    # Repository where GoReleaser should commit the Winget manifest files
+    repository:
+      owner: ulfschneider         # your GitHub username
+      name: winget-pkgs    # e.g., a fork of microsoft/winget-pkgs
+      branch: "qrvc-{{ .Version }}"   # branch to push manifests
+      pull_request:
+        enabled: true
+        draft: true
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
+    # Optional: URL template for your release artifacts
+    # Default is inferred from the GitHub release based on your GoReleaser settings
 
 changelog:
   sort: asc
