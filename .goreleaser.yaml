@@ -68,7 +68,6 @@ homebrew_casks:
     repository:
       owner: ulfschneider
       name: homebrew-tap
-      branch: main
 
     hooks:
       post:
