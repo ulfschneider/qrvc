@@ -53,21 +53,30 @@ archives:
 
 homebrew_casks:
   - name: qrvc
-    repository:
-      owner: ulfschneider
-      name: homebrew-tap
+    ids:
+      - unix-tar
+    binaries:
+      - qrvc
+    url:
+      template: "https://github.com/ulfschneider/qrvc/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+      verified: "github.com/ulfschneider/qrvc"
+
     homepage: "https://github.com/ulfschneider/qrvc"
     description: "Use the command line to make a QR code from a vCard"
     license: "MIT"
-    # Optional: if your app/binary isn't signed and notarized, you'll need this:
+
+    repository:
+      owner: ulfschneider
+      name: homebrew-tap
+      branch: main
+
     hooks:
       post:
-        # remove the quarantaine
         install: |
           if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/qrvc"]
+            system_command "/usr/bin/xattr",
+              args: ["-dr", "com.apple.quarantine", "#{staged_path}/qrvc"]
           end
-
 
 changelog:
   sort: asc

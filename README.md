@@ -13,7 +13,7 @@ qrvc is command line tool to prepare a QR code from a vCard.
 
 ```sh
 brew tap ulfschneider/tap
-brew install qrvc
+brew install --cask qrvc
 ```
 
 ### Install with Go on any machine that has Go on board
