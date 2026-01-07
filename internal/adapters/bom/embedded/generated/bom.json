@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:85a7007a-0f28-4304-b039-f432cfe01ec7",
+  "serialNumber": "urn:uuid:7ff8b61f-e7c0-4e99-9cb6-64c7662630a4",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-01-07T14:26:33+01:00",
+    "timestamp": "2026-01-07T14:32:49+01:00",
     "tools": [
       {
         "vendor": "CycloneDX",
@@ -46,11 +46,11 @@
       }
     ],
     "component": {
-      "bom-ref": "pkg:golang/github.com/ulfschneider/qrvc@v0.11.2-0.20251229074816-b395f59a3edd?type=module",
+      "bom-ref": "pkg:golang/github.com/ulfschneider/qrvc@v0.11.3-0.20260107132634-4b0916b4670f?type=module",
       "type": "application",
       "name": "github.com/ulfschneider/qrvc",
-      "version": "v0.11.2-0.20251229074816-b395f59a3edd",
-      "purl": "pkg:golang/github.com/ulfschneider/qrvc@v0.11.2-0.20251229074816-b395f59a3edd?type=module\u0026goos=darwin\u0026goarch=arm64",
+      "version": "v0.11.3-0.20260107132634-4b0916b4670f",
+      "purl": "pkg:golang/github.com/ulfschneider/qrvc@v0.11.3-0.20260107132634-4b0916b4670f?type=module\u0026goos=darwin\u0026goarch=arm64",
       "externalReferences": [
         {
           "url": "https://github.com/ulfschneider/qrvc",
@@ -1142,7 +1142,7 @@
   ],
   "dependencies": [
     {
-      "ref": "pkg:golang/github.com/ulfschneider/qrvc@v0.11.2-0.20251229074816-b395f59a3edd?type=module",
+      "ref": "pkg:golang/github.com/ulfschneider/qrvc@v0.11.3-0.20260107132634-4b0916b4670f?type=module",
       "dependsOn": [
         "pkg:golang/github.com/CycloneDX/cyclonedx-go@v0.9.3?type=module",
         "pkg:golang/github.com/charmbracelet/huh@v0.8.0?type=module",
