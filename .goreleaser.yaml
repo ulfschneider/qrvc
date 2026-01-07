@@ -1,4 +1,3 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
 
 # The lines below are called `modelines`. See `:help modeline`
@@ -10,38 +9,49 @@ version: 2
 
 project_name: qrvc
 
-
 builds:
-  - env:
+  - id: unix-binary
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
+  - id: windows-binary
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
 
 release:
-   extra_files:
-      - glob: dist/qrvc_Windows_*.exe
-   github:
-      owner: ulfschneider
-      name: qrvc
+  github:
+    owner: ulfschneider
+    name: qrvc
+
 
 archives:
-  - formats: [tar.gz]
-    # this name template makes the OS and Arch compatible with the results of `uname`.
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
-    format_overrides:
-      - goos: windows
-        formats: [zip]
+  # tar.gz for Linux & macOS, used by Homebrew
+  - id: unix-tar
+    formats: tar.gz
+    ids:
+      - unix-binary
+    name_template: "{{ .ProjectName }}_{{ .Os | title }}_{{ .Arch }}"
 
-brews:
+  # ZIPs for Windows, used by winget
+  - id: windows-zip
+    formats: zip
+    ids:
+      - windows-binary
+    name_template: "{{ .ProjectName }}_Windows_{{ .Arch }}"
+
+
+homebrew_casks:
   - name: qrvc
     repository:
       owner: ulfschneider
@@ -49,42 +59,15 @@ brews:
     homepage: "https://github.com/ulfschneider/qrvc"
     description: "Use the command line to make a QR code from a vCard"
     license: "MIT"
-    install: |
-      bin.install "qrvc"
-    test: |
-      system "#{bin}/qrvc", "--version"
+    # Optional: if your app/binary isn't signed and notarized, you'll need this:
+    hooks:
+      post:
+        # remove the quarantaine
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/qrvc"]
+          end
 
-winget:
-  - name: qrvc
-    # Required: publisher name as it will appear in the manifest
-    publisher: "Ulf Schneider"
-    # A short description of the app (required)
-    short_description: "Use the command line to make a QR code from a vCard"
-    # License name (required)
-    license: "MIT"
-    # Homepage for the project
-    homepage: "https://github.com/ulfschneider/qrvc"
-    # Optional support or issue URL
-    publisher_support_url: "https://github.com/ulfschneider/qrvc/issues"
-    # Tags for the manifest
-    tags:
-      - cli
-      - qr
-      - go
-    # Repository where GoReleaser should commit the Winget manifest files
-    repository:
-      owner: ulfschneider         # your GitHub username
-      name: winget-pkgs    # e.g., a fork of microsoft/winget-pkgs
-      branch: "qrvc-{{ .Version }}"   # branch to push manifests
-      pull_request:
-        enabled: true
-        draft: true
-        base:
-          owner: microsoft
-          name: winget-pkgs
-          branch: master
-    # Optional: URL template for your release artifacts
-    # Default is inferred from the GitHub release based on your GoReleaser settings
 
 changelog:
   sort: asc

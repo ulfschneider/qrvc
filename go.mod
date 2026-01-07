@@ -4,7 +4,7 @@ go 1.25.3
 
 require (
 	github.com/emersion/go-vcard v0.0.0-20241024213814-c9703dde27ff
-	github.com/mazznoer/csscolorparser v0.1.6
+	github.com/mazznoer/csscolorparser v0.1.7
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 )
 

@@ -27,14 +27,14 @@ help:
 ## build: builds and archives the binaries, but does not distribute them
 .PHONY: build
 build:
-		@echo "Building qrvc $(NORMALIZED_VERSION)"; \
-		if [ ! -f ./.env ]; then \
-				echo "ERROR: .env not found"; exit 1; \
-		fi; \
-		set -a; \
-		. ./.env; \
-		set +a; \
-		goreleaser build --clean --snapshot
+	@echo "Building qrvc $(NORMALIZED_VERSION)"; \
+	if [ ! -f ./.env ]; then \
+			echo "ERROR: .env not found"; exit 1; \
+	fi; \
+	set -a; \
+	. ./.env; \
+	set +a; \
+	goreleaser build --snapshot --clean
 
 
 ## release: tag the current state as a release in Git and build and distribute the binaries
@@ -142,8 +142,6 @@ check:
 	ineffassign ./...
 	misspell -error ./...
 	govulncheck ./...
-
-
 
 
 .PHONY: build-and-distribute
